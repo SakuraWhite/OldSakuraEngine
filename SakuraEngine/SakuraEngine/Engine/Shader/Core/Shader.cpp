@@ -1,12 +1,12 @@
 #include "Shader.h"
 
 
-LPVOID FShader::GetBufferPointer()
+LPVOID FShader::GetBufferPointer() const
 {
 	return ShaderCode->GetBufferPointer();
 }
 
-SIZE_T FShader::GetBufferSize()
+SIZE_T FShader::GetBufferSize() const
 {
 	return ShaderCode->GetBufferSize();
 }

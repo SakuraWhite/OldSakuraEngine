@@ -3,9 +3,9 @@
 #include "core/Mesh.h"
 
 //自定义Mesh
-class CCustomMesh :public CMesh   //自定义Mesh
+class GCustomMesh :public GMesh   //自定义Mesh
 {
-	typedef CMesh Super;
+	typedef GMesh Super;
 public:
 	virtual void Init();//继承自Mesh.h里的Rendeing.h里的的渲染初始化 
 

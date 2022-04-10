@@ -5,6 +5,8 @@
 #include "../../Core/CoreObject/CoreMinimalObject.h"
 #include "../../Core/World.h"
 #include "../../Rendering/Enigne/DurectX/DirectX12RenderingEngine.h"
+#include "../../Core/Camera.h"
+
 //生成Mash头文件
 #include "../../Mesh/BoxMesh.h"
 #include "../../Mesh/SphereMesh.h"
@@ -60,7 +62,7 @@ int CWindowsEngine::Init(FWinMainCommandParameters InParameters)
 	//RenderingEngine开始初始化
 	RenderingEngine->Init(InParameters);
 	//初始化世界
-	CWorld *World  = CreateObject<CWorld>(new CWorld());
+	World  = CreateObject<CWorld>(new CWorld());
 
 	Engine_Log("Engine initialization complete.");
 	
@@ -98,8 +100,21 @@ void CWindowsEngine::Tick(float DeltaTime)
 		}
 		
 	}
+	if (World)//判断世界是否有值
+	{
+		if (World->GetCamera())//判断世界中的相机是否有值
+		{
+		FViewportInfo ViewportInfo;
+		ViewportInfo.ViewMatrix = World->GetCamera()->ViewMatrix;//通过世界拿到相机再拿到我们的屏幕空间 然后赋值给视口信息中的屏幕空间
+		ViewportInfo.ProjectMatrix = World->GetCamera()->ProjectMatrix;//通过世界拿到相机再拿到我们的物体空间  然后赋值给视口信息中的物体空间
+		RenderingEngine->UpdateCalculations(DeltaTime, ViewportInfo);
 
-	RenderingEngine->Tick(DeltaTime);
+		RenderingEngine->Tick(DeltaTime);
+
+		}
+
+	}
+
 
 	
 }

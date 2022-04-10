@@ -1,23 +1,23 @@
 #include "Core/MeshType.h"
 #include "CustomMesh.h"
 
-void CCustomMesh::Init()
+void GCustomMesh::Init()
 {
 	Super::Init();//执行父类
 }
 
-void CCustomMesh::BuildMesh(const FMeshRenderingData* InRendingData)
+void GCustomMesh::BuildMesh(const FMeshRenderingData* InRendingData)
 {
 	Super::BuildMesh(InRendingData);//执行父类
 
 }
 
-void CCustomMesh::Draw(float DeltaTime)
+void GCustomMesh::Draw(float DeltaTime)
 {
 	Super::Draw(DeltaTime);//执行父类
 }
 
-void CCustomMesh::CreateMesh(FMeshRenderingData& MeshData, string& InPath)
+void GCustomMesh::CreateMesh(FMeshRenderingData& MeshData, string& InPath)
 {
 	//判断是否为OBJ格式
 	
@@ -42,7 +42,7 @@ void CCustomMesh::CreateMesh(FMeshRenderingData& MeshData, string& InPath)
 
 
 
-bool CCustomMesh::LoadObjFormBuff(char* InBuff, uint32_t InBuffSize, FMeshRenderingData& MeshData)
+bool GCustomMesh::LoadObjFormBuff(char* InBuff, uint32_t InBuffSize, FMeshRenderingData& MeshData)
 {
 
 
@@ -76,7 +76,7 @@ bool CCustomMesh::LoadObjFormBuff(char* InBuff, uint32_t InBuffSize, FMeshRender
 					{
 						//然后把顶点保存然后添加  先添加一个
 						MeshData.VertexData.push_back(FVertex(
-							XMFLOAT3(),XMFLOAT4(Colors::Black)));
+							XMFLOAT3(),XMFLOAT4(Colors::White)));
 
 						//拿到添加后的位置
 						int TopIndex = MeshData.VertexData.size() - 1;//拿到索引

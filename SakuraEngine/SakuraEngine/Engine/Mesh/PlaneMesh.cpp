@@ -1,24 +1,24 @@
 #include "Core/MeshType.h"
 #include "PlaneMesh.h"
 
-void CPlaneMesh::Init()
+void GPlaneMesh::Init()
 {
 	Super::Init();
 
 
 }
-void CPlaneMesh::BuildMesh(const FMeshRenderingData* InRenderingData)
+void GPlaneMesh::BuildMesh(const FMeshRenderingData* InRenderingData)
 {
 	Super::BuildMesh(InRenderingData);//执行父类
 
 }
 
-void CPlaneMesh::Draw(float DeltaTime)
+void GPlaneMesh::Draw(float DeltaTime)
 {
 	Super::Draw(DeltaTime);//执行父类
 }
 
-void CPlaneMesh::CreateMesh(FMeshRenderingData& MeshData, float InHeight, float InWidth, uint32_t InHeightSubdivide, uint32_t InWidthSubdivide)
+void GPlaneMesh::CreateMesh(FMeshRenderingData& MeshData, float InHeight, float InWidth, uint32_t InHeightSubdivide, uint32_t InWidthSubdivide)
 {
 	
 	auto SubdivideValue =  [ & ] ( float InValue, uint32_t  InSubdivideValue)->float  //判断细分值 防止归零导致出错
@@ -51,7 +51,7 @@ void CPlaneMesh::CreateMesh(FMeshRenderingData& MeshData, float InHeight, float 
 					X, //x
 					0.f, //y
 					Z),//z
-				XMFLOAT4(Colors::Red)));
+				XMFLOAT4(Colors::White)));
 
 		}
 	}

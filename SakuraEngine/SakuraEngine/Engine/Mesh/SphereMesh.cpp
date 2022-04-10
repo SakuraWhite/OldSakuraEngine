@@ -1,23 +1,23 @@
 #include "Core/MeshType.h"
 #include "SphereMesh.h"
 
-void CSphereMesh::Init()
+void GSphereMesh::Init()
 {
 	Super::Init();//执行父类
 }
 
-void CSphereMesh::BuildMesh(const FMeshRenderingData* InRendingData)
+void GSphereMesh::BuildMesh(const FMeshRenderingData* InRendingData)
 {
 	Super::BuildMesh(InRendingData);//执行父类
 
 }
 
-void CSphereMesh::Draw(float DeltaTime)
+void GSphereMesh::Draw(float DeltaTime)
 {
 	Super::Draw(DeltaTime);//执行父类
 }
 
-void CSphereMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
+void GSphereMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
 	float InRadius, //球体的是半径
 	uint32_t InAxialSubdivision,//球体的轴向细分
 	uint32_t InHeightSubdivision) //球体的高度细分
@@ -27,7 +27,7 @@ void CSphereMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
 	float ThetaValue = XM_2PI / InHeightSubdivision;//这里是计算的是β 高度轴
 	float BetaValue = XM_PI / InAxialSubdivision; //这里计算的是θ 轴心
 	//计算起始点
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f,InRadius,0.f),XMFLOAT4(Colors::Red))); //赋予颜色
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f,InRadius,0.f),XMFLOAT4(Colors::White))); //赋予颜色
 
 
 	//开始计算构建球体顶点
@@ -44,7 +44,7 @@ void CSphereMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
 					InRadius * sinf(Beta) * cosf(Theta),//构建X轴 x = r * sinθ * cosβ r是球半径InRadius
 					InRadius * cosf(Beta), //构建Y轴 y = r * cosβ
 					InRadius * sinf(Beta) * sinf(Theta)),//构建Z轴 z = r * sinβ * sinθ
-				XMFLOAT4(Colors::Red))); //赋予颜色
+				XMFLOAT4(Colors::White))); //赋予颜色
 
 			int TopIndex = MeshData.VertexData.size() - 1; //获取顶点
 
@@ -55,11 +55,11 @@ void CSphereMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
 	} 
 
 	//计算球体底部终止点
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, -InRadius, 0.f), XMFLOAT4(Colors::Red))); //赋予颜色
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, -InRadius, 0.f), XMFLOAT4(Colors::White))); //赋予颜色
 
 
 	//绘制北极
-	for (uint32_t Index = 0; Index < InAxialSubdivision; ++Index)//这里是逆时针 逆时针法线是正的
+	for (uint32_t Index = 0; Index <= InAxialSubdivision; ++Index)//这里是逆时针 逆时针法线是正的
 	{
 	
 		MeshData.IndexData.push_back(0);//第一个一定是0 
@@ -104,4 +104,10 @@ void CSphereMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
 		MeshData.IndexData.push_back(BaseIndex + Index);//2
 		MeshData.IndexData.push_back(BaseIndex + Index + 1); //1    0-2-1组成的三角面
 	}
+
+
+	//纠正
+	//MeshData.IndexData[SouthBaseIndex - 2];
+	//MeshData.IndexData[SouthBaseIndex - 3];
+
 }

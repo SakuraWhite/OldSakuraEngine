@@ -75,31 +75,41 @@ int CDirectXRenderingEngine::PostInit()
 	{
 		//构建Mesh
 		// BOX 盒子
-		//	CBoxMesh* Box = CBoxMesh::CreateMesh();
-		//MeshManage->CreateBoxMesh(4.f,3.f,1.5f);
-
+		if (GMesh* BoxMesh = MeshManage->CreateBoxMesh(4.f, 3.f, 1.5f))
+		{
+			BoxMesh->SetPosition(XMFLOAT3(5, 2, 5));
+			BoxMesh->SetRotation(fvector_3d(60.f, 1.f, 20.f));
+			BoxMesh->SetScale(fvector_3d(3.f, 3.f, 3.f));
+		}
+		//	GBoxMesh* Box = GBoxMesh::CreateMesh(4.f, 3.f, 1.5f);
+		
 		//ConeMesh 圆锥
-		//	CConeMesh* ConeMesh = CConeMesh::CreateMesh(1.f, 5.f, 20, 20);
-		//MeshManage ->CreateConeMesh(1.f, 5.f, 20, 20);
-		
-		// 自定义
-			string MeshObjPath = "../../Mesh/EDMesh_01.obj";
-			MeshManage->CreateMesh(MeshObjPath);
-		
+		//	MeshManage ->CreateConeMesh(1.f, 5.f, 20, 20);
+		//	GConeMesh* ConeMesh = GConeMesh::CreateMesh(1.f, 5.f, 20, 20);
+
+		// 自定义  注意顺序
+		//	string MeshObjPath = "../../Mesh/EDMesh.obj";
+		//	MeshManage->CreateMesh(MeshObjPath);
+			
 		// Cylinder 圆柱体
-		//CCylinderMesh* CylinderMesh = CCylinderMesh::CreateMesh(1.f,1.f,5.f,20,20);
-		//MeshManage ->CreateCylinderMesh(1.f, 1.f, 5.f, 20, 20);
+		//  MeshManage ->CreateCylinderMesh(1.f, 1.f, 5.f, 20, 20);
+		//GCylinderMesh* CylinderMesh = GCylinderMesh::CreateMesh(1.f,1.f,5.f,20,20);
 		
 		// Plane 面片
-		//CPlaneMesh PlaneMesh =CPlaneMesh:: PlaneMesh(4.f, 3.f, 20, 20);
-		//MeshManage->CreatePlaneMesh(4.f, 3.f, 20, 20);
-		
+		 MeshManage->CreatePlaneMesh(4.f, 3.f, 20, 20);
+		//GPlaneMesh PlaneMesh =GPlaneMesh:: PlaneMesh(4.f, 3.f, 20, 20);
+				
 		//Sphere 球体
-		//CSphereMesh* SphereMesh = CSphereMesh::CreateMesh(2.f, 20, 20);
-		//MeshManage ->CreateSphereMesh(2.f, 20, 20);
+		if (GMesh* SphereMesh = MeshManage->CreateSphereMesh(2.f, 20, 20)) //获取球体 并对球体位置进行变更
+		{
+			SphereMesh->SetPosition(XMFLOAT3(10,20,40));//对模型位置进行设置
+
+		}
+		//GSphereMesh* SphereMesh = GSphereMesh::CreateMesh(2.f, 20, 20);
 
 	}
-
+	//渲染模型
+	MeshManage->BuildMesh();
 	//提交录入初始化
 	ANALYSIS_HRESULT(GraphicsCommandList->Close());
 
@@ -111,11 +121,18 @@ int CDirectXRenderingEngine::PostInit()
 	return 0;
 }
 
+void CDirectXRenderingEngine::UpdateCalculations(float DeltaTime, const FViewportInfo& ViewportInfo)
+{
+	//执行数学的方法
+	MeshManage->UpdateCalculations(DeltaTime, ViewportInfo);
+}
+
 void CDirectXRenderingEngine::Tick(float DeltaTime)
 {
 	//重置录制相关的内存，为下一帧做准备 
 	ANALYSIS_HRESULT(CommandAllocator->Reset());
 
+	//Mesh的预初始化
 	MeshManage->PreDraw(DeltaTime);
 
 	//指向哪个资源 转换其状态
@@ -133,7 +150,7 @@ void CDirectXRenderingEngine::Tick(float DeltaTime)
 	//清除画布
 	GraphicsCommandList->ClearRenderTargetView(//我们可以使用ClearRenderTargetView来吧画布清楚为各种颜色，比如红色白色蓝色等等
 		GetCurrentSwapBufferView(),//我们需要获取的视图
-		DirectX::Colors::Cornsilk,		//把画布给清除为各种颜色的API
+		DirectX::Colors::Black,		//把画布给清除为各种颜色的API
 		0, nullptr);//0与nullptr是与视口相关
 
 	//清除深度模板缓冲区
@@ -154,6 +171,7 @@ void CDirectXRenderingEngine::Tick(float DeltaTime)
 		true,//代表传入的句柄指向一个连续的描述符指针
 		&DepthStencilView);//指定深度目标
 
+	
 	MeshManage->Draw(DeltaTime);//渲染的结构框架
 	MeshManage->PostDraw(DeltaTime);//渲染提交
 
@@ -195,13 +213,13 @@ int CDirectXRenderingEngine::Exit()
 
 int CDirectXRenderingEngine::PostExit()
 {
-	FEngineRenderConfig::Destroy();
+	
 
 	Engine_Log("Engine post exit complete.");
 	return 0;
 }
 
-ID3D12Resource* CDirectXRenderingEngine::GetCurrentSwapBuff() const
+ID3D12Resource* CDirectXRenderingEngine::GetCurrentSwapBuff() const //获取BUFF交换链  BUFF交换链属于渲染器的内容
 {
 	return SwapChainBuffer[CurrentSwapBuffIndex].Get();
 }
@@ -513,7 +531,7 @@ void CDirectXRenderingEngine::PostInitDirect3D()
 	//这些会覆盖原先windows画布
 	//描述视口尺寸
 	ViewprotInfo.TopLeftX = 0;//设置渲染视口的X轴
-	ViewprotInfo.TopLeftY = 0;//设置渲染视口的X轴
+	ViewprotInfo.TopLeftY = 0;//设置渲染视口的y轴
 	ViewprotInfo.Width = FEngineRenderConfig::GetRenderConfig()->ScrrenWidth;//设置渲染视口的宽度
 	ViewprotInfo.Height = FEngineRenderConfig::GetRenderConfig()->ScrrenHight;//设置渲染视口的高度
 	ViewprotInfo.MinDepth = 0.f;//当前最小深度

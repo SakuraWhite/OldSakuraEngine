@@ -9,7 +9,7 @@
 struct FInputKey;
 class CTransformationComponent;
 class CInputComponent;
-class CCamera;
+class GCamera;
 
 //C开头的Camera  C是核心意思 继承自CCoreMinimalObject与Fviewport
 class CWorld :public CCoreMinimalObject 
@@ -17,7 +17,10 @@ class CWorld :public CCoreMinimalObject
 public:
 	CWorld();
 
+	GCamera* GetCamera(){return Camera;}
+
+protected:
 	CVARIABLE()
-	CCamera* Camera;//相机实例
+	GCamera* Camera;//相机实例
 
 };

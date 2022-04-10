@@ -2,9 +2,9 @@
 
 #include "core/Mesh.h"
 
-class CBoxMesh :public CMesh   //生成一个标准化的BOX 继承自FMesh
+class GBoxMesh :public GMesh   //生成一个标准化的BOX 继承自FMesh
 {
-	typedef CMesh Super;
+	typedef GMesh Super;
 public:
 	virtual void Init();//继承自Mesh.h里的Rendeing.h里的的渲染初始化 
 	

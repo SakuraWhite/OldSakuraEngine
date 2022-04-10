@@ -1,10 +1,12 @@
 #pragma once //防止重复包含
 #include "../../Core/RenderingEngine.h"
+#include "../../../../Core/Viewport/ViewportInfo.h"
 
 class CMeshManage;
 class CDirectXRenderingEngine :public CRenderingEngine
 {
-	friend class IRenderingInterface;//创建一个接口
+	friend class IDirectXDeviceInterfece;//接口 可以去访问DirectXDeviceInterfece
+
 
 public://公开的 初始化相关
 	CDirectXRenderingEngine();
@@ -15,6 +17,8 @@ public://公开的 初始化相关
 	virtual int Init(FWinMainCommandParameters InParameters);//引擎的初始化
 	virtual int PostInit();//初始化之后的收尾
 
+	//更新数学的方法			 第一个值是当前的数据			第二个值是视口信息
+	virtual void UpdateCalculations(float DeltaTime , const FViewportInfo &ViewportInfo);
 	virtual void Tick(float DeltaTime);//Tick不断的刷新渲染引擎
 
 	virtual int PreExit();//预退出

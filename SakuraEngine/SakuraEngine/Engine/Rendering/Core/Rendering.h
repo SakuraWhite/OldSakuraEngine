@@ -21,22 +21,8 @@ public:
 	virtual void Draw(float DeltaTime); //渲染相关 进行时
 	virtual void PostDraw(float DeltaTime);//交付渲染 poatDraw
 
-protected:
-	//创建默认缓冲区
-	ComPtr<ID3D12Resource> ConstructDefaultBuffer(
-		ComPtr<ID3D12Resource>& OutTmpBuffer, //我们要输出的上传缓冲区
-		const void*InData,	 //当前的数据
-		UINT64 InDataSize);  //当前数据的大小
-protected:
-	ComPtr<ID3D12Device>  GetD3dDevice(); //拿到在WindowsEngine.h里的D3D驱动
-	ComPtr<ID3D12GraphicsCommandList> GetGraphicsCommandList();//拿到在WindowsEngine.h里用于同步CPU和一个或多个GPU的对象
-	ComPtr<ID3D12CommandAllocator> GetCommandAllocator();//接口
-#if defined(_WIN32)	 //做运行环境的区分
-	CWindowsEngine* GetEngine();
-#else
-	CEngine* GetEngine();  //如果是win32就走默认的
-#endif
-		
+
+
 	/*
 private:
 	static vector<IRenderingInterface*> RenderingInterface;//静态函数

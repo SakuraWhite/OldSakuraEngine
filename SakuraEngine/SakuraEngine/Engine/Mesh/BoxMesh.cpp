@@ -1,24 +1,24 @@
 #include "BoxMesh.h"
 #include "Core/MeshType.h"
 
-void CBoxMesh::Init()
+void GBoxMesh::Init()
 {
 	Super::Init();//执行父类
 }
 
-void CBoxMesh::BuildMesh(const FMeshRenderingData* InRendingData)
+void GBoxMesh::BuildMesh(const FMeshRenderingData* InRendingData)
 {
 	Super::BuildMesh(InRendingData);//执行父类
 
 }
 
-void CBoxMesh::Draw(float DeltaTime)
+void GBoxMesh::Draw(float DeltaTime)
 {
 	Super::Draw(DeltaTime);//执行父类
 }
 
 
-void CBoxMesh::CreateMesh(FMeshRenderingData& MeshData, float InHeight, float InWidth, float InDepth)
+void GBoxMesh::CreateMesh(FMeshRenderingData& MeshData, float InHeight, float InWidth, float InDepth)
 {
 	
 
@@ -32,13 +32,13 @@ void CBoxMesh::CreateMesh(FMeshRenderingData& MeshData, float InHeight, float In
 
 	//构建顶点
 	MeshData.VertexData.push_back(FVertex(XMFLOAT3(-CWidth, -CHeight, -CDepth),XMFLOAT4(Colors::White)));//
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(-CWidth, CHeight, -CDepth),XMFLOAT4(Colors::AliceBlue)));//绘制第二个点
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(CWidth, CHeight, -CDepth),XMFLOAT4(Colors::Aqua)));//绘制第三个点
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(CWidth, -CHeight, -CDepth),XMFLOAT4(Colors::Aquamarine)));//绘制第四个点
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(-CWidth, -CHeight, CDepth),XMFLOAT4(Colors::Bisque)));//绘制第五个点
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(-CWidth, CHeight, CDepth),XMFLOAT4(Colors::Blue)));//绘制第六个点
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(CWidth, CHeight, CDepth),XMFLOAT4(Colors::Chocolate)));//绘制第七个点
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(CWidth, -CHeight, CDepth),XMFLOAT4(Colors::Chocolate)));//绘制第八个点
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(-CWidth, CHeight, -CDepth),XMFLOAT4(Colors::White)));//绘制第二个点
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(CWidth, CHeight, -CDepth),XMFLOAT4(Colors::White)));//绘制第三个点
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(CWidth, -CHeight, -CDepth),XMFLOAT4(Colors::White)));//绘制第四个点
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(-CWidth, -CHeight, CDepth),XMFLOAT4(Colors::White)));//绘制第五个点
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(-CWidth, CHeight, CDepth),XMFLOAT4(Colors::White)));//绘制第六个点
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(CWidth, CHeight, CDepth),XMFLOAT4(Colors::White)));//绘制第七个点
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(CWidth, -CHeight, CDepth),XMFLOAT4(Colors::White)));//绘制第八个点
 
 
 	//构建顶点索引

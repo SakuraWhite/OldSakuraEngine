@@ -1,23 +1,23 @@
 #include "Core/MeshType.h"
 #include "ConeMesh.h"
 
-void CConeMesh::Init()
+void GConeMesh::Init()
 {
 	Super::Init();//执行父类
 }
 
-void CConeMesh::BuildMesh(const FMeshRenderingData* InRendingData)
+void GConeMesh::BuildMesh(const FMeshRenderingData* InRendingData)
 {
 	Super::BuildMesh(InRendingData);//执行父类
 
 }
 
-void CConeMesh::Draw(float DeltaTime)
+void GConeMesh::Draw(float DeltaTime)
 {
 	Super::Draw(DeltaTime);//执行父类
 }
 
-void CConeMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
+void GConeMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
 	float InRadius,  //圆锥体底部半径  因为圆锥体顶部是单个顶点 ，所以只有底部有半径
 	float InHeight,  //圆锥体高度
 	uint32_t InAxialSubdivision,//轴细分
@@ -34,7 +34,7 @@ void CConeMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
 
 	//构建顶部顶点
 		//构建圆锥顶部中心顶点
-		MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, 0.5f * InHeight, 0.f), XMFLOAT4(Colors::Red)));
+		MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, 0.5f * InHeight, 0.f), XMFLOAT4(Colors::White)));
 
 		uint32_t Index = MeshData.VertexData.size();//顶点体顶部起始点
 		for (uint32_t i = 0; i < InHeightSubdivision; ++i)
@@ -52,7 +52,7 @@ void CConeMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
 			}
 		}
 	//圆锥体体底部的中心点
-	MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, -0.5f * InHeight, 0.f), XMFLOAT4(Colors::Red)));
+	MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, -0.5f * InHeight, 0.f), XMFLOAT4(Colors::White)));
 
 	//绘制顶部面 Index
 	for (uint32_t i = 0; i < InAxialSubdivision; ++i)
@@ -67,7 +67,7 @@ void CConeMesh::CreateMesh(FMeshRenderingData& MeshData,//创建当前Mesh结构数据
 	float BaseIndex = 1;//初始顶点 1
 	float VertexCircleNum = InAxialSubdivision + 1;//旋转一圈的顶点数量
 	//圆锥腰部
-	for (uint32_t i = 0; i < InHeightSubdivision - 2; ++i)
+	for (uint32_t i = 0; i < InHeightSubdivision - 1; ++i)
 	{
 		for (uint32_t j = 0; j < InAxialSubdivision; ++j)
 		{

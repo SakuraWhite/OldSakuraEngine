@@ -6,8 +6,8 @@ class FShader //Shader类 包含两大元素：顶点着色器，像素着色器
 {
 public:
 	//暴露二进制指针
-	LPVOID  GetBufferPointer();
-	SIZE_T GetBufferSize();
+	LPVOID GetBufferPointer() const;
+	SIZE_T GetBufferSize() const;
 
 
 	void BuildShaders(				 //接口 通过接口区去编译Shader代码

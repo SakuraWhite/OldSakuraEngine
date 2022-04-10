@@ -1,23 +1,23 @@
 #include "Core/MeshType.h"
 #include "CylinderMesh.h"
 
-void CCylinderMesh::Init()
+void GCylinderMesh::Init()
 {
 	Super::Init();
 }
 
-void CCylinderMesh::BuildMesh(const FMeshRenderingData* InRenderIngData)
+void GCylinderMesh::BuildMesh(const FMeshRenderingData* InRenderIngData)
 {
 	Super::BuildMesh(InRenderIngData);
 }
 
 
-void CCylinderMesh::Draw(float DeltaTime)
+void GCylinderMesh::Draw(float DeltaTime)
 {
 	Super::Draw(DeltaTime);
 }
 
-void CCylinderMesh::CreateMesh(FMeshRenderingData& MeshData, float InTopRadius, float InBottomRadius, float InHeight, uint32_t InAxialSubdivision, uint32_t InHeightSubdivision)
+void GCylinderMesh::CreateMesh(FMeshRenderingData& MeshData, float InTopRadius, float InBottomRadius, float InHeight, uint32_t InAxialSubdivision, uint32_t InHeightSubdivision)
 {
 	//半径间隔:计算从顶部到底部的半径差.如果是圆柱形,那就为0。为了计算上窄下宽或者上宽下窄的情况
 	float RadiusInterval = (InTopRadius - InBottomRadius) / InHeightSubdivision;//顶部半径减去底部半径，然后除以高度细分，计算从上到下的宽度差的值
@@ -26,7 +26,7 @@ void CCylinderMesh::CreateMesh(FMeshRenderingData& MeshData, float InTopRadius, 
 	//弧度
 	float Betavalue = XM_2PI / (float)InAxialSubdivision;//2Π除以当前的轴细分
 	//遍历计算圆柱体顶点
-	for (uint32_t i = 0; i < InHeightSubdivision; ++i )//先构建高度  使用的是高度细分
+	for (uint32_t i = 0; i < InHeightSubdivision + 1; ++i )//先构建高度  使用的是高度细分
 	{
 		float Y = (0.5f * InHeight) - HeightInterval * i;//计算Y轴
 		float Radius = InTopRadius + i * RadiusInterval;//计算半径
@@ -45,7 +45,7 @@ void CCylinderMesh::CreateMesh(FMeshRenderingData& MeshData, float InTopRadius, 
 	//绘制模型面
 	float VertexCircleNum = InAxialSubdivision + 1;//旋转一圈的顶点数量
 	//绘制圆柱体腰围
-	for (uint32_t i = 0; i < InHeightSubdivision; ++i)
+	for (uint32_t i = 0; i < InHeightSubdivision + 1; ++i)
 	{
 		for (uint32_t j = 0; j < InAxialSubdivision; ++j)
 		{
@@ -89,7 +89,7 @@ void CCylinderMesh::CreateMesh(FMeshRenderingData& MeshData, float InTopRadius, 
 				XMFLOAT4(Colors::Red)));
 		}
 		//圆柱体顶部的中心点
-		MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, Y, 0.f),XMFLOAT4(Colors::Red)));
+		MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, Y, 0.f),XMFLOAT4(Colors::White)));
 	
 		//绘制顶部面
 		float Cpoint = MeshData.VertexData.size() - 1;//绘制顶部圆心中心点
@@ -119,7 +119,7 @@ void CCylinderMesh::CreateMesh(FMeshRenderingData& MeshData, float InTopRadius, 
 
 
 		//圆柱体顶部的中心点
-		MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, Y, 0.f), XMFLOAT4(Colors::Red)));
+		MeshData.VertexData.push_back(FVertex(XMFLOAT3(0.f, Y, 0.f), XMFLOAT4(Colors::White)));
 
 		//绘制顶部面
 		float Cpoint = MeshData.VertexData.size() - 1;//绘制顶部圆心中心点

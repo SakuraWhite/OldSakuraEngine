@@ -15,4 +15,10 @@ struct FMeshRenderingData //模型渲染数据
 {
 	vector<FVertex> VertexData; //储存顶点数据
 	vector<uint16_t> IndexData; //模型的Index
+
+public:
+	//获取当前顶点的Size的字节
+	UINT GetVertexSizeInBytes() { return VertexData.size() * sizeof(FVertex); }
+	//获取当前Index的Size的字节
+	UINT GetIndexSizeInBytes() { return IndexData.size() * sizeof(uint16_t); }
 };

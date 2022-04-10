@@ -5,10 +5,12 @@
 #include "../../Rendering//Enigne/Core/RenderingEngine.h"
 
 class CDirectXRenderingEngine;
+class CWorld;
+
 
 class CWindowsEngine :public CEngine //CWindowsEngine继承自"Engine.h"中的CEngine
 {
-	friend class IRenderingInterface; //创建一个接口可以让Rendering.h访问WindowsEngine.h里的所有函数
+	friend class IDirectXDeviceInterfece; //接口
 
 public://公开的 初始化相关
 	CWindowsEngine();
@@ -36,6 +38,9 @@ protected: //受保护的
 
 protected:
 	CDirectXRenderingEngine* RenderingEngine;
+	//word实例
+	CWorld* World;
+
 };
 
 #endif
