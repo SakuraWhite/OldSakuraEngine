@@ -17,8 +17,8 @@ public:
 
 	//设置物体朝向向量
 	void SetForwardVector(const XMFLOAT3& InForwardVector);
-	void SetRightVevtor(const XMFLOAT3& InRightVevtor);
-	void SetUPVevtor(const XMFLOAT3& InUPVevtor);
+	void SetRightVector(const XMFLOAT3& InRightVevtor);
+	void SetUPVector(const XMFLOAT3& InUPVevtor);
 
 public:
 	//获得物体位置

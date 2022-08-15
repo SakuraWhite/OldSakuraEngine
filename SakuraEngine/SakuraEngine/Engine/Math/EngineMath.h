@@ -8,5 +8,7 @@ namespace EngineMath
 {
 	//数学方法  数学计算库 
 	 XMFLOAT4X4 IdentityMatrix4x4();//单位化4x4矩阵  
+
+	 XMFLOAT3 ToFloat3(const fvector_3d& InV3d);
 }
 

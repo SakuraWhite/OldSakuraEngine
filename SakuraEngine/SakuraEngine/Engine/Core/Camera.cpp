@@ -165,8 +165,8 @@ void GCamera::OnMouseMove(int X, int Y)
 		{
 			case CameraRoaming: //如果为漫游模式
 			{
-				RotateAroundYAxis(YRadians);//更新Y轴
-				RotateAroundZAxis(XRadians);//更新Z轴
+				RotateAroundXAxis(YRadians);//更新Y轴
+				RotateAroundYAxis(XRadians);//更新Z轴
 				break;
 			}
 
@@ -254,45 +254,47 @@ void GCamera::MoveRight(float InValue)
 
 }
 
-void GCamera::RotateAroundYAxis(FLOAT InRotateDegrees)
-{
+void GCamera::RotateAroundXAxis(float InRotateDegrees)
+{   //绕物体X轴旋转
+
 	//当旋转一个轴的时候 其他的轴应相应的旋转
 	//获取相机的正向 朝上 朝右的方向
 	XMFLOAT3 RightVector = GetTransformationComponent()->GetRightVector();
 	XMFLOAT3 UPVector = GetTransformationComponent()->GetUPVector();
 	XMFLOAT3 ForwardVector = GetTransformationComponent()->GetForwardVector();
 
-	//拿到关于X的旋转矩阵  使用摄像机自身的X轴来求出矩阵        指定摄像机自身的Y轴
+	//拿到关于X的旋转矩阵  使用摄像机自身的X轴来求出矩阵 X轴是物体朝右方向    指定摄像机自身的Y轴
 	XMMATRIX RotationX = XMMatrixRotationAxis(XMLoadFloat3(&GetTransformationComponent()->GetRightVector()), InRotateDegrees);
 
 
-	//计算各个方向和按照Z轴旋转后的最终效果
+	//计算各个方向和按照X轴旋转后的最终效果
 	//注掉Y轴 防止影响
 // 	XMStoreFloat3(//储存浮点数的API		
 // 		&TransformationComponent->GetRightVector(), //算出的东西赋值给旋转方向
 // 		XMVector3TransformNormal(XMLoadFloat3(&RightVector),//DXAP乘法然后单位化
-// 		RotationY));//把相机方向转换类型 然后去乘以拿到的Z轴矩阵
+// 		RotationY));//把相机方向转换类型 然后去乘以拿到的X轴矩阵
 	XMStoreFloat3(&GetTransformationComponent()->GetUPVector(), XMVector3TransformNormal(XMLoadFloat3(&UPVector), RotationX));
 	XMStoreFloat3(&GetTransformationComponent()->GetForwardVector(), XMVector3TransformNormal(XMLoadFloat3(&ForwardVector), RotationX));
 
 }
 
-void GCamera::RotateAroundZAxis(FLOAT InRotateDegrees)
-{
+void GCamera::RotateAroundYAxis(float InRotateDegrees)
+{	//绕物体Y轴旋转
+
 	//当旋转一个轴的时候 其他的轴应相应的旋转
 	//获取相机的正向 朝上 朝右的方向
 	XMFLOAT3 RightVector = GetTransformationComponent()->GetRightVector();
 	XMFLOAT3 UPVector = GetTransformationComponent()->GetUPVector();
 	XMFLOAT3 ForwardVector = GetTransformationComponent()->GetForwardVector();
 
-	//拿到关于Y的旋转矩阵		求出绕Y轴旋转矩阵
+	//拿到关于Y的旋转矩阵		求出绕Y轴旋转矩阵         Y轴是物体朝上方向
 	XMMATRIX RotationY = XMMatrixRotationY(InRotateDegrees);
 
-	//计算各个方向和按照Z轴旋转后的最终效果
+	//计算各个方向和按照Y轴旋转后的最终效果
 	XMStoreFloat3(//储存浮点数的API		
 		&GetTransformationComponent()->GetRightVector(), //算出的东西赋值给旋转方向
 		XMVector3TransformNormal(XMLoadFloat3(&RightVector),//DXAP乘法然后单位化
-			RotationY));//把相机方向转换类型 然后去乘以拿到的Z轴矩阵
+			RotationY));//把相机方向转换类型 然后去乘以拿到的Y轴矩阵
 	XMStoreFloat3(&GetTransformationComponent()->GetUPVector(), XMVector3TransformNormal(XMLoadFloat3(&UPVector), RotationY));
 	XMStoreFloat3(&GetTransformationComponent()->GetForwardVector(), XMVector3TransformNormal(XMLoadFloat3(&ForwardVector), RotationY));
 }

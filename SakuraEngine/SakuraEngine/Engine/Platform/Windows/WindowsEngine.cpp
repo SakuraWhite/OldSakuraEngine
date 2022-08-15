@@ -61,8 +61,10 @@ int CWindowsEngine::Init(FWinMainCommandParameters InParameters)
 	RenderingEngine->SetMianWindowsHandle(MianWindowsHandle);
 	//RenderingEngine开始初始化
 	RenderingEngine->Init(InParameters);
-	//初始化世界
+
+	//注册对应的world世界信息
 	World  = CreateObject<CWorld>(new CWorld());
+	RenderingEngine->World = World;
 
 	Engine_Log("Engine initialization complete.");
 	
@@ -105,8 +107,14 @@ void CWindowsEngine::Tick(float DeltaTime)
 		if (World->GetCamera())//判断世界中的相机是否有值
 		{
 		FViewportInfo ViewportInfo;
+
+		XMFLOAT3 ViewPosition = World->GetCamera()->GetPosition(); //通过世界拿到相机位置
+		ViewportInfo.ViewPosition = XMFLOAT4(ViewPosition.x, ViewPosition.y, ViewPosition.z, 1.f);//实时更新相机位置然后给相机位置赋值
+
 		ViewportInfo.ViewMatrix = World->GetCamera()->ViewMatrix;//通过世界拿到相机再拿到我们的屏幕空间 然后赋值给视口信息中的屏幕空间
+		
 		ViewportInfo.ProjectMatrix = World->GetCamera()->ProjectMatrix;//通过世界拿到相机再拿到我们的物体空间  然后赋值给视口信息中的物体空间
+		
 		RenderingEngine->UpdateCalculations(DeltaTime, ViewportInfo);
 
 		RenderingEngine->Tick(DeltaTime);
@@ -146,7 +154,10 @@ int CWindowsEngine::PostExit()
 }
 
 
-
+CMeshManage* CWindowsEngine::GetMeshManage()
+{
+	return RenderingEngine->GetMeshManage();
+}
 
 
 

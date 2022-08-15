@@ -53,10 +53,8 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Label="Shared">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -121,6 +119,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <HeapReserveSize>100000000</HeapReserveSize>
+      <HeapCommitSize>100000000</HeapCommitSize>
+      <StackReserveSize>100000000</StackReserveSize>
+      <StackCommitSize>100000000</StackCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -140,35 +142,91 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Engine\Actor\Core\ActorObject.cpp" />
+    <ClCompile Include="Engine\Actor\Light\Core\Light.cpp" />
+    <ClCompile Include="Engine\Actor\Light\Core\RangeLight.cpp" />
+    <ClCompile Include="Engine\Actor\Light\ParallelLight.cpp" />
+    <ClCompile Include="Engine\Actor\Light\PointLight.cpp" />
+    <ClCompile Include="Engine\Actor\Light\SpotLight.cpp" />
     <ClCompile Include="Engine\Component\core\Component.cpp" />
-    <ClCompile Include="Engine\Component\InputComponent.cpp" />
+    <ClCompile Include="Engine\Component\Input\Input.cpp" />
     <ClCompile Include="Engine\Component\Input\InputType.cpp" />
+    <ClCompile Include="Engine\Component\InputComponent.cpp" />
+    <ClCompile Include="Engine\Component\Light\Core\LightComponent.cpp" />
+    <ClCompile Include="Engine\Component\Light\Core\LightConstantBuffer.cpp" />
+    <ClCompile Include="Engine\Component\Light\Core\LightType.cpp" />
+    <ClCompile Include="Engine\Component\Light\Core\RangeLightComponent.cpp" />
+    <ClCompile Include="Engine\Component\Light\ParallelLightComponent.cpp" />
+    <ClCompile Include="Engine\Component\Light\PointLightComponent.cpp" />
+    <ClCompile Include="Engine\Component\Light\SpotLightComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\BoxMeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\ConeMeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\Core\MeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\Core\MeshComponentType.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\Core\ShellMeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\CustomMeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\CylinderMeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\PipeMeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\PlaneMeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\PyramidMeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\SphereMeshComponent.cpp" />
+    <ClCompile Include="Engine\Component\Mesh\TorusMeshComponent.cpp" />
     <ClCompile Include="Engine\Component\TransformationComponent.cpp" />
     <ClCompile Include="Engine\Config\EngineRenderConfig.cpp" />
     <ClCompile Include="Engine\Core\Camera.cpp" />
+    <ClCompile Include="Engine\Core\Construction\ActorMeshConstruction.cpp" />
+    <ClCompile Include="Engine\Core\Construction\MeshConstruction.cpp" />
+    <ClCompile Include="Engine\Core\Construction\ObjectConstruction.cpp" />
     <ClCompile Include="Engine\Core\CoreObject\CoreMinimalObject.cpp" />
     <ClCompile Include="Engine\Core\CoreObject\GuidInterface.cpp" />
     <ClCompile Include="Engine\Core\Engine.cpp" />
-    <ClCompile Include="Engine\Core\Viewport.cpp" />
+    <ClCompile Include="Engine\Core\Viewport\Viewport.cpp" />
+    <ClCompile Include="Engine\Core\Viewport\ViewportInfo.cpp" />
+    <ClCompile Include="Engine\Core\Viewport\ViewportTransformation.cpp" />
     <ClCompile Include="Engine\Core\WinMainCommandParameters.cpp" />
     <ClCompile Include="Engine\Core\World.cpp" />
     <ClCompile Include="Engine\Debug\EngineDebug.cpp" />
     <ClCompile Include="Engine\EngineFactory.cpp" />
+    <ClCompile Include="Engine\Interface\DirectXDeviceInterfece.cpp" />
+    <ClCompile Include="Engine\Interface\OpenGLDeviceInterfece.cpp" />
+    <ClCompile Include="Engine\Manage\LightManage.cpp" />
     <ClCompile Include="Engine\Math\EngineMath.cpp" />
     <ClCompile Include="Engine\Mesh\BoxMesh.cpp" />
     <ClCompile Include="Engine\Mesh\ConeMesh.cpp" />
+    <ClCompile Include="Engine\Mesh\Core\Material\Material.cpp" />
+    <ClCompile Include="Engine\Mesh\Core\Material\MaterialConstantBuffer.cpp" />
+    <ClCompile Include="Engine\Mesh\Core\Material\MaterialType.cpp" />
     <ClCompile Include="Engine\Mesh\Core\Mesh.cpp" />
     <ClCompile Include="Engine\Mesh\Core\MeshManage.cpp" />
     <ClCompile Include="Engine\Mesh\Core\MeshType.cpp" />
     <ClCompile Include="Engine\Mesh\Core\ObjectTransformation.cpp" />
     <ClCompile Include="Engine\Mesh\CustomMesh.cpp" />
     <ClCompile Include="Engine\Mesh\CylinderMesh.cpp" />
+    <ClCompile Include="Engine\Mesh\PipeMesh.cpp" />
     <ClCompile Include="Engine\Mesh\PlaneMesh.cpp" />
+    <ClCompile Include="Engine\Mesh\PyramidMesh.cpp" />
     <ClCompile Include="Engine\Mesh\SphereMesh.cpp" />
+    <ClCompile Include="Engine\Mesh\TorusMesh.cpp" />
     <ClCompile Include="Engine\Platform\Windows\WindowsEngine.cpp" />
     <ClCompile Include="Engine\Platform\Windows\WindowsMessageProcessing.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\Buffer\ConstructBuffer.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\ConstantBuffer\ConstantBufferViews.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\DescriptorHeap\DirectXDescriptorHeap.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\Geometry\GeometryMap.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\Geometry\RenderingData.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\PipelineState\DirectXPipelineState.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderingPipeline.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\Core\RenderLayer.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\RenderLayer\AlphaTestRenderLayer.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\RenderLayer\OpaqueRenderLayer.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\RenderLayer\TransparentRenderLayer.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\RenderLayerManage.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RootSignature\DirectXRootSignature.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\DirectX\RenderingPipeline\StaticSampler\StaticSamplerObject.cpp" />
     <ClCompile Include="Engine\Rendering\Core\Rendering.cpp" />
     <ClCompile Include="Engine\Rendering\Core\RenderingResourcesUpdate.cpp" />
+    <ClCompile Include="Engine\Rendering\Core\RenderingTextureResourcesUpdate.cpp" />
+    <ClCompile Include="Engine\Rendering\DirectX12\DDSTextureLoader.cpp" />
     <ClCompile Include="Engine\Rendering\Enigne\Core\RenderingEngine.cpp" />
     <ClCompile Include="Engine\Rendering\Enigne\DurectX\Core\DirectXRenderingEngine.cpp" />
     <ClCompile Include="Engine\Rendering\Enigne\DurectX\DirectX11RenderingEngine.cpp" />
@@ -194,58 +252,137 @@
     <ClCompile Include="simple_library\private\simple_core_minimal\simple_c_time\simple_c_time.c" />
     <ClCompile Include="simple_library\private\simple_core_minimal\simple_c_windows\simple_c_windows_register.c" />
     <ClCompile Include="simple_library\private\simple_core_minimal\simple_c_windows\simple_c_windows_setting.c" />
+    <ClCompile Include="simple_library\private\simple_cpp_core_minimal\simple_cpp_helper_file\simple_cpp_helper_file.cpp" />
+    <ClCompile Include="simple_library\private\simple_cpp_core_minimal\simple_cpp_string_algorithm\simple_cpp_string_algorithm.cpp" />
     <ClCompile Include="simple_library\private\simple_c_log\simple_c_log.c" />
     <ClCompile Include="simple_library\private\simple_image\Core\simple_image_bmp.cpp" />
     <ClCompile Include="simple_library\private\simple_image\simple_image.cpp" />
     <ClCompile Include="simple_library\private\simple_math\math_utils.cpp" />
     <ClCompile Include="simple_library\private\simple_math\simple_math.c" />
+    <ClCompile Include="simple_library\private\simple_math\soft_rasterization\soft_rasterization.cpp" />
     <ClCompile Include="simple_library\private\simple_math\transformation\matrix\matrix_2x2.cpp" />
     <ClCompile Include="simple_library\private\simple_math\transformation\matrix\matrix_3x3.cpp" />
     <ClCompile Include="simple_library\private\simple_math\transformation\matrix\matrix_4x4.cpp" />
+    <ClCompile Include="simple_library\private\simple_math\transformation\primitives\line.cpp" />
+    <ClCompile Include="simple_library\private\simple_math\transformation\primitives\triangle.cpp" />
+    <ClCompile Include="simple_library\private\simple_math\transformation\quaternion\quat.cpp" />
+    <ClCompile Include="simple_library\private\simple_math\transformation\rotator\rotator.cpp" />
     <ClCompile Include="simple_library\private\simple_math\transformation\vector\vector_2d.cpp" />
+    <ClCompile Include="simple_library\private\simple_math\transformation\vector\vector_2id.cpp" />
     <ClCompile Include="simple_library\private\simple_math\transformation\vector\vector_3d.cpp" />
+    <ClCompile Include="simple_library\private\simple_math\transformation\vector\vector_3id.cpp" />
     <ClCompile Include="simple_library\private\simple_math\transformation\vector\vector_4d.cpp" />
+    <ClCompile Include="simple_library\private\simple_math\transformation\vector\vector_4id.cpp" />
+    <ClCompile Include="simple_library\private\simple_math\transformation\vector\vector_color.cpp" />
+    <ClCompile Include="simple_library\third_party_library\tinyxml\tinystr.cpp" />
+    <ClCompile Include="simple_library\third_party_library\tinyxml\tinyxml.cpp" />
+    <ClCompile Include="simple_library\third_party_library\tinyxml\tinyxmlerror.cpp" />
+    <ClCompile Include="simple_library\third_party_library\tinyxml\tinyxmlparser.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Engine\Actor\Core\ActorObject.h" />
+    <ClInclude Include="Engine\Actor\Light\Core\Light.h" />
+    <ClInclude Include="Engine\Actor\Light\Core\RangeLight.h" />
+    <ClInclude Include="Engine\Actor\Light\ParallelLight.h" />
+    <ClInclude Include="Engine\Actor\Light\PointLight.h" />
+    <ClInclude Include="Engine\Actor\Light\SpotLight.h" />
     <ClInclude Include="Engine\CodeReflection\CodeReflectionMacroTag.h" />
     <ClInclude Include="Engine\Component\core\Component.h" />
-    <ClInclude Include="Engine\Component\InputComponent.h" />
+    <ClInclude Include="Engine\Component\Input\Input.h" />
     <ClInclude Include="Engine\Component\Input\InputType.h" />
+    <ClInclude Include="Engine\Component\InputComponent.h" />
+    <ClInclude Include="Engine\Component\Light\Core\LightComponent.h" />
+    <ClInclude Include="Engine\Component\Light\Core\LightConstantBuffer.h" />
+    <ClInclude Include="Engine\Component\Light\Core\LightType.h" />
+    <ClInclude Include="Engine\Component\Light\Core\RangeLightComponent.h" />
+    <ClInclude Include="Engine\Component\Light\ParallelLightComponent.h" />
+    <ClInclude Include="Engine\Component\Light\PointLightComponent.h" />
+    <ClInclude Include="Engine\Component\Light\SpotLightComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\BoxMeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\ConeMeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\Core\MeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\Core\MeshComponentType.h" />
+    <ClInclude Include="Engine\Component\Mesh\Core\ShellMeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\CustomMeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\CylinderMeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\PipeMeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\PlaneMeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\PyramidMeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\SphereMeshComponent.h" />
+    <ClInclude Include="Engine\Component\Mesh\TorusMeshComponent.h" />
     <ClInclude Include="Engine\Component\TransformationComponent.h" />
     <ClInclude Include="Engine\Config\EngineRenderConfig.h" />
     <ClInclude Include="Engine\Core\Camera.h" />
+    <ClInclude Include="Engine\Core\CameraType.h" />
+    <ClInclude Include="Engine\Core\Construction\ActorMeshConstruction.h" />
+    <ClInclude Include="Engine\Core\Construction\MacroConstruction.h" />
+    <ClInclude Include="Engine\Core\Construction\MeshConstruction.h" />
+    <ClInclude Include="Engine\Core\Construction\ObjectConstruction.h" />
     <ClInclude Include="Engine\Core\CoreObject\CoreMinimalObject.h" />
     <ClInclude Include="Engine\Core\CoreObject\GuidInterface.h" />
     <ClInclude Include="Engine\Core\Engine.h" />
-    <ClInclude Include="Engine\Core\Viewport.h" />
+    <ClInclude Include="Engine\Core\Viewport\Viewport.h" />
+    <ClInclude Include="Engine\Core\Viewport\ViewportInfo.h" />
+    <ClInclude Include="Engine\Core\Viewport\ViewportTransformation.h" />
     <ClInclude Include="Engine\Core\WinMainCommandParameters.h" />
     <ClInclude Include="Engine\Core\World.h" />
     <ClInclude Include="Engine\Debug\EngineDebug.h" />
     <ClInclude Include="Engine\Debug\Log\SimpleLog.h" />
     <ClInclude Include="Engine\EngineFactory.h" />
     <ClInclude Include="Engine\EngineMinimal.h" />
+    <ClInclude Include="Engine\Interface\DirectXDeviceInterfece.h" />
+    <ClInclude Include="Engine\Interface\OpenGLDeviceInterfece.h" />
+    <ClInclude Include="Engine\Manage\LightManage.h" />
     <ClInclude Include="Engine\Math\EngineMath.h" />
     <ClInclude Include="Engine\Mesh\BoxMesh.h" />
     <ClInclude Include="Engine\Mesh\ConeMesh.h" />
+    <ClInclude Include="Engine\Mesh\Core\Material\Material.h" />
+    <ClInclude Include="Engine\Mesh\Core\Material\MaterialConstantBuffer.h" />
+    <ClInclude Include="Engine\Mesh\Core\Material\MaterialType.h" />
     <ClInclude Include="Engine\Mesh\Core\Mesh.h" />
     <ClInclude Include="Engine\Mesh\Core\MeshManage.h" />
     <ClInclude Include="Engine\Mesh\Core\MeshType.h" />
     <ClInclude Include="Engine\Mesh\Core\ObjectTransformation.h" />
     <ClInclude Include="Engine\Mesh\CustomMesh.h" />
     <ClInclude Include="Engine\Mesh\CylinderMesh.h" />
+    <ClInclude Include="Engine\Mesh\PipeMesh.h" />
     <ClInclude Include="Engine\Mesh\PlaneMesh.h" />
+    <ClInclude Include="Engine\Mesh\PyramidMesh.h" />
     <ClInclude Include="Engine\Mesh\SphereMesh.h" />
+    <ClInclude Include="Engine\Mesh\TorusMesh.h" />
     <ClInclude Include="Engine\Platform\Windows\WindowsEngine.h" />
     <ClInclude Include="Engine\Platform\Windows\WindowsMessageProcessing.h" />
     <ClInclude Include="Engine\Platform\Windows\WindowsPlatform.h" />
+    <ClInclude Include="Engine\Rendering\Core\Buffer\ConstructBuffer.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\ConstantBuffer\ConstantBufferViews.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\DescriptorHeap\DirectXDescriptorHeap.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\Geometry\GeometryMap.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\Geometry\RenderingData.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\PipelineState\DirectXPipelineState.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderingPipeline.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderingPipelineType.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\Core\RenderLayer.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\RenderLayer\AlphaTestRenderLayer.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\RenderLayer\OpaqueRenderLayer.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\RenderLayer\TransparentRenderLayer.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RenderLayer\RenderLayerManage.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\RootSignature\DirectXRootSignature.h" />
+    <ClInclude Include="Engine\Rendering\Core\DirectX\RenderingPipeline\StaticSampler\StaticSamplerObject.h" />
     <ClInclude Include="Engine\Rendering\Core\Rendering.h" />
     <ClInclude Include="Engine\Rendering\Core\RenderingResourcesUpdate.h" />
+    <ClInclude Include="Engine\Rendering\Core\RenderingTextureResourcesUpdate.h" />
     <ClInclude Include="Engine\Rendering\DirectX12\d3dx12.h" />
+    <ClInclude Include="Engine\Rendering\DirectX12\DDSTextureLoader.h" />
     <ClInclude Include="Engine\Rendering\Enigne\Core\RenderingEngine.h" />
     <ClInclude Include="Engine\Rendering\Enigne\DurectX\Core\DirectXRenderingEngine.h" />
     <ClInclude Include="Engine\Rendering\Enigne\DurectX\DirectX11RenderingEngine.h" />
     <ClInclude Include="Engine\Rendering\Enigne\DurectX\DirectX12RenderingEngine.h" />
     <ClInclude Include="Engine\Shader\Core\Shader.h" />
+    <ClInclude Include="Shader\HelloHLSL.hlsl" />
+    <ClInclude Include="Shader\Light.hlsl" />
+    <ClInclude Include="Shader\Material.hlsl" />
+    <ClInclude Include="Shader\ShaderCommon.hlsl" />
+    <ClInclude Include="Shader\ShaderFunctionLibrary.hlsl" />
     <ClInclude Include="simple_library\private\simple_channel\simple_net_connetion\simple_connetion_tcp.h" />
     <ClInclude Include="simple_library\private\simple_channel\simple_net_connetion\simple_connetion_udp.h" />
     <ClInclude Include="simple_library\private\simple_channel\simple_net_drive\simple_net_drive_tcp.h" />
@@ -275,24 +412,37 @@
     <ClInclude Include="simple_library\public\simple_cpp_core_minimal\shared\simple_cpp_shared_ptr.h" />
     <ClInclude Include="simple_library\public\simple_cpp_core_minimal\shared\simple_cpp_shared_ptr_type.h" />
     <ClInclude Include="simple_library\public\simple_cpp_core_minimal\simple_cpp_core_minimal.h" />
+    <ClInclude Include="simple_library\public\simple_cpp_core_minimal\simple_cpp_helper_file\simple_cpp_helper_file.h" />
+    <ClInclude Include="simple_library\public\simple_cpp_core_minimal\simple_cpp_string_algorithm\simple_cpp_string_algorithm.h" />
     <ClInclude Include="simple_library\public\simple_c_log\simple_c_log.h" />
     <ClInclude Include="simple_library\public\simple_delegate\simple_delegate.h" />
     <ClInclude Include="simple_library\public\simple_image\Core\simple_image_bmp.h" />
     <ClInclude Include="simple_library\public\simple_image\Core\simple_image_type.h" />
     <ClInclude Include="simple_library\public\simple_image\simple_image.h" />
     <ClInclude Include="simple_library\public\simple_library.h" />
+    <ClInclude Include="simple_library\public\simple_library_macro.h" />
     <ClInclude Include="simple_library\public\simple_math\math_libray.hpp" />
     <ClInclude Include="simple_library\public\simple_math\math_utils.h" />
     <ClInclude Include="simple_library\public\simple_math\simple_core_math.h" />
     <ClInclude Include="simple_library\public\simple_math\simple_math.h" />
+    <ClInclude Include="simple_library\public\simple_math\soft_rasterization\soft_rasterization.h" />
     <ClInclude Include="simple_library\public\simple_math\transformation\matrix\matrix_2x2.h" />
     <ClInclude Include="simple_library\public\simple_math\transformation\matrix\matrix_3x3.h" />
     <ClInclude Include="simple_library\public\simple_math\transformation\matrix\matrix_4x4.h" />
+    <ClInclude Include="simple_library\public\simple_math\transformation\primitives\line.h" />
+    <ClInclude Include="simple_library\public\simple_math\transformation\primitives\triangle.h" />
+    <ClInclude Include="simple_library\public\simple_math\transformation\quaternion\quat.h" />
+    <ClInclude Include="simple_library\public\simple_math\transformation\rotator\rotator.h" />
     <ClInclude Include="simple_library\public\simple_math\transformation\vector\vector_2d.h" />
+    <ClInclude Include="simple_library\public\simple_math\transformation\vector\vector_2id.h" />
     <ClInclude Include="simple_library\public\simple_math\transformation\vector\vector_3d.h" />
+    <ClInclude Include="simple_library\public\simple_math\transformation\vector\vector_3id.h" />
     <ClInclude Include="simple_library\public\simple_math\transformation\vector\vector_4d.h" />
+    <ClInclude Include="simple_library\public\simple_math\transformation\vector\vector_4id.h" />
+    <ClInclude Include="simple_library\public\simple_math\transformation\vector\vector_color.h" />
+    <ClInclude Include="simple_library\third_party_library\tinyxml\tinystr.h" />
+    <ClInclude Include="simple_library\third_party_library\tinyxml\tinyxml.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

@@ -2,11 +2,14 @@
 #include "../../Core/RenderingEngine.h"
 #include "../../../../Core/Viewport/ViewportInfo.h"
 
+class CLightManage;
 class CMeshManage;
+class CWorld;
+
 class CDirectXRenderingEngine :public CRenderingEngine
 {
 	friend class IDirectXDeviceInterfece;//接口 可以去访问DirectXDeviceInterfece
-
+	friend class CWindowsEngine;
 
 public://公开的 初始化相关
 	CDirectXRenderingEngine();
@@ -33,6 +36,10 @@ public://公开的 接口相关 供光栅化使用
 	DXGI_FORMAT GetDepthStencilFormat() const { return DepthStencilFormat; } //获取深度模板
 	UINT GetDXGISampleCount()const;//获取采样数量 
 	UINT GetDXGISampleQuality()const;//获取采样的质量
+
+	CMeshManage* GetMeshManage() { return MeshManage; }//获取模型信息
+	CLightManage* GetLightManage() { return LightManage; }//获取灯光信息
+
 protected://受保护的 这里是做一些GPU围栏
 	void WaitGPUCommandQueueComplete();
 
@@ -40,7 +47,9 @@ protected://受保护的 这里是做一些GPU围栏
 	void PostInitDirect3D();//初始化Direct3D接口
 
 protected:
-	CMeshManage* MeshManage;
+	CLightManage* LightManage;//灯光信息接口
+	CMeshManage* MeshManage; //模型信息接口
+	CWorld* World;			 //世界信息接口
 protected:
 	UINT64 CurrentFenceIndex;//当前的围栏的指数，给GPU与CPU同步使用的
 	int CurrentSwapBuffIndex;//当前Swap BUFF的Index 

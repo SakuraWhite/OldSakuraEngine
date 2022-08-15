@@ -23,7 +23,7 @@ void FViewport::ViewportInit()
 		0.25f * XM_PI, //以弧度为单位的自上而下的视场角。这里是45°
 		AspectRatio,//视图or屏幕空间 X:Y 的纵横比。
 		1.0f,		//到近剪裁平面的距离 必须大于零
-		1000.f		//近剪裁平面到远剪裁面的距离 。
+		10000.f		//近剪裁平面到远剪裁面的距离 。
 	);
 
 	XMStoreFloat4x4(&ProjectMatrix, Project);//物体空间的转换

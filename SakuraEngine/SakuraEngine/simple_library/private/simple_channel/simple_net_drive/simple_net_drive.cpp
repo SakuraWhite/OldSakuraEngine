@@ -9,15 +9,15 @@ FSimpleNetDrive::FSimpleNetDrive()
 
 }
 
-FSimpleNetDrive* FSimpleNetDrive::GetNetDrive(ESimpleSokcetType InSokcetType, ESimpleDriveType InDriveType)
+FSimpleNetDrive* FSimpleNetDrive::GetNetDrive(ESimpleSocketType InSokcetType, ESimpleDriveType InDriveType)
 {
 	FSimpleNetDrive* NetDrive = nullptr;
 	switch (InSokcetType)
 	{
-	case ESimpleSokcetType::SOKCETTYPE_UDP:
+	case ESimpleSocketType::SOCKETTYPE_UDP:
 		NetDrive = new FSimpleUDPNetDrive(InDriveType);
 		break;
-	case ESimpleSokcetType::SOKCETTYPE_TCP:
+	case ESimpleSocketType::SOCKETTYPE_TCP:
 		NetDrive = new FSimpleTCPNetDrive(InDriveType);
 		break;
 	}

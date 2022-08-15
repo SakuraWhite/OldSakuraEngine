@@ -7,7 +7,7 @@ template< class TReturn, typename ...ParamTypes>
 class FDelegateBase
 {
 public:
-	virtual TReturn Execute(ParamTypes &&...Params)
+	virtual TReturn Execute(ParamTypes ...Params)
 	{
 		return TReturn();
 	}
@@ -23,9 +23,9 @@ public:
 		, Funcation(InFuncation)
 	{}
 
-	virtual TReturn Execute(ParamTypes &&...Params)
+	virtual TReturn Execute(ParamTypes ...Params)
 	{
-		return (Object->*Funcation)(std::forward<ParamTypes>(Params)...);
+		return (Object->*Funcation)(Params...);
 	}
 
 private:
@@ -41,9 +41,9 @@ public:
 		:Funcation(InFuncation)
 	{}
 
-	virtual TReturn Execute(ParamTypes &&...Params)
+	virtual TReturn Execute(ParamTypes ...Params)
 	{
-		return (*Funcation)(std::forward<ParamTypes>(Params)...);
+		return (*Funcation)(Params...);
 	}
 
 private:
@@ -109,9 +109,9 @@ public:
 		return CurrentDelegatePtr != nullptr;
 	}
 
-	virtual TReturn Execute(ParamTypes &&...Params)
+	virtual TReturn Execute(ParamTypes ...Params)
 	{
-		return CurrentDelegatePtr->Execute(std::forward<ParamTypes>(Params)...);
+		return CurrentDelegatePtr->Execute(Params...);
 	}
 
 	FDelegate<TReturn, ParamTypes...> &operator=(const FDelegate<TReturn, ParamTypes...> &InDelegate)
@@ -185,11 +185,12 @@ public:
 		return Handle;
 	}
 
-	void Broadcast(ParamTypes &&...Params)
+	void Broadcast(ParamTypes ...Params)
 	{
 		for (auto &Tmp :*this)
 		{
-			Tmp.second.Execute(std::forward<ParamTypes>(Params)...);
+			//Tmp.second.Execute(std::forward<ParamTypes>(Params)...);
+			Tmp.second.Execute(Params...);
 		}		
 	}
 

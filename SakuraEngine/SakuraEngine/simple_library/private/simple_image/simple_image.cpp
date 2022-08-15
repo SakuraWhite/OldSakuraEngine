@@ -42,6 +42,24 @@ namespace SimpleImage
 		return save_data_to_disk_w(InPath,Data.data(), Data.size());
 	}
 
+	bool GetRGBImageDataExcludeHeaderInfor(int InWidth, int InHeight, std::vector<unsigned char>& InData)
+	{
+		SimpleImage::FImageInfo ImageInfo;
+		ImageInfo.Height = InWidth;
+		ImageInfo.Width = InHeight;
+		ImageInfo.Channel = SimpleImage::EImageChannel::Channel_24Bit;
+		ImageInfo.ImageType = SimpleImage::EImageType::Bmp;
+
+		return GetImageDataExcludeHeaderInfor(ImageInfo, InData);
+	}
+
+	bool GetImageDataExcludeHeaderInfor(const FImageInfo& InImageInfo, std::vector<unsigned char>& InData)
+	{
+		InData.resize(InImageInfo.Height * InImageInfo.Width * (int)InImageInfo.Channel);
+	
+		return InData.size() > (size_t)InImageInfo.Channel;
+	}
+
 	bool SaveImageToDisk(const FImageInfo& InImageInfo, const std::wstring& InSavePath, const std::vector<unsigned char>& InData)
 	{
 		switch (InImageInfo.ImageType)

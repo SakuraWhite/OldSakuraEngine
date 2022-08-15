@@ -8,8 +8,8 @@ public:
 	FRenderingResourcesUpdate();//构造函数
 	~FRenderingResourcesUpdate();//析构函数
 
-	//初始化资源 第一个是驱动，第二个是元素的大小,第三个是元素的数量
-	void Init(ID3D12Device* InDevice, UINT InElemetSize, UINT InElemetCount);
+	//初始化资源					驱动，		元素的大小,		   元素的数量		 判断常量缓冲区磨人true		
+	void Init(ID3D12Device* InDevice, UINT InElemetSize, UINT InElemetCount, bool bConstBuffer = true);
 
 	void Update(int Index, const void* InData);//更新数据
 

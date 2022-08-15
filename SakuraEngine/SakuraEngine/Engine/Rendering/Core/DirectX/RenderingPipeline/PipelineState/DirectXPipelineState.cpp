@@ -4,16 +4,27 @@
 
 FDirectXPipelineState::FDirectXPipelineState()
 {
+	//初始化管线状态  初始化为实体灰模状态
+	PipelineState = EPipelineState::GrayModel;
 
+	//插入管线状态对象								 4是键盘输入的数字 切换为线框显示
+	PSO.insert(pair<int, ComPtr<ID3D12PipelineState>>(4, ComPtr<ID3D12PipelineState>()));//线框
+
+	//插入管线状态对象								 4是键盘输入的数字 切换为指定实体渲染模式
+	PSO.insert(pair<int, ComPtr<ID3D12PipelineState>>(5, ComPtr<ID3D12PipelineState>()));//Shader 
 }
 
 void FDirectXPipelineState::PreDraw(float DeltaTime)
 {
-	GetGraphicsCommandList()->Reset(GetCommandAllocator().Get(), PSO.Get());//对PSO进行初始化
+	//区分当前管线状态对象按照什么方式来显示							读取不同的管线状态枚举
+	GetGraphicsCommandList()->Reset(GetCommandAllocator().Get(), PSO[(int)PipelineState].Get());//对PSO进行初始化
 }
 
 void FDirectXPipelineState::Draw(float DeltaTime)
 {
+	//键盘案件捕获
+	CaptureKeyboardKeys();
+
 }
 
 void FDirectXPipelineState::PostDraw(float DeltaTime)
@@ -50,7 +61,7 @@ void FDirectXPipelineState::BindShader(const FShader& InVertexShader, const FSha
 	GPSDesc.PS.BytecodeLength = InPixelShader.GetBufferSize();
 }
 
-void FDirectXPipelineState::Build()
+void FDirectXPipelineState::BuildParam()
 {
 
 	//配置光栅化状态
@@ -72,6 +83,57 @@ void FDirectXPipelineState::Build()
 	//RTV 和 DSV格式
 	GPSDesc.RTVFormats[0] = GetEngine()->GetRenderingEngine()->GetBackBufferFormat(); //设置RTV的格式 纹理格式后缓冲区
 	GPSDesc.DSVFormat = GetEngine()->GetRenderingEngine()->GetDepthStencilFormat();//设置DSV  深度模板
-	//获取D3D驱动
-	ANALYSIS_HRESULT(GetD3dDevice()->CreateGraphicsPipelineState(&GPSDesc, IID_PPV_ARGS(&PSO)))//获取Graph管线状态
+}
+
+void FDirectXPipelineState::Build(int InPSOType)
+{
+	if (PSO.find(InPSOType) == PSO.end()) //判断管线状态对象类型 
+	{
+		//如果未找到内容，则插入一个管线状态对象 保证有值
+		//插入管线状态对象										切换为指定实体渲染模式
+		PSO.insert(pair<int, ComPtr<ID3D12PipelineState>>(InPSOType, ComPtr<ID3D12PipelineState>()));//Shader 
+	}
+
+
+	//线框模式注册	  获取D3D驱动														指定线框模式
+	ANALYSIS_HRESULT(GetD3dDevice()->CreateGraphicsPipelineState(&GPSDesc, IID_PPV_ARGS(&PSO[InPSOType])))//获取Graph管线状态
+
+	
+	////指定shader渲染模式  再次创建图元拓扑类型
+	//GPSDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;//以实体渲染方式显示
+	////实体渲染模式注册   获取D3D驱动														指定实体渲染模式
+	//ANALYSIS_HRESULT(GetD3dDevice()->CreateGraphicsPipelineState(&GPSDesc, IID_PPV_ARGS(&PSO[GrayModel])))//获取Graph管线状态
+
+}
+
+void FDirectXPipelineState::ResetPSO(int InPSOType)
+{
+	//通过获取图形命令列表 设置管道状态(类型)
+	GetGraphicsCommandList()->SetPipelineState(PSO[InPSOType].Get());
+}
+
+void FDirectXPipelineState::SetFillMode(bool bWireframe)
+{
+	//判断渲染状态是否为线框模式
+	GPSDesc.RasterizerState.FillMode = bWireframe ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
+}
+
+void FDirectXPipelineState::SetRenderTarget(int Index, const D3D12_RENDER_TARGET_BLEND_DESC& InRenderTargetBlend)
+{
+	//设置渲染目标
+	GPSDesc.BlendState.RenderTarget[Index] = InRenderTargetBlend;
+}
+
+void FDirectXPipelineState::CaptureKeyboardKeys()
+{
+	//键盘捕获
+	if (GetAsyncKeyState('4') & 0x8000)//判断键盘是否输入了数字“4”
+	{
+		PipelineState = EPipelineState::Wireframe;//我们的管线状态更改为线框
+	}
+	else if (GetAsyncKeyState('5') & 0x8000)//判断键盘是否输入了数字“5”
+	{
+		PipelineState = EPipelineState::GrayModel;//我们的管线状态更改为实体渲染
+	}
+
 }

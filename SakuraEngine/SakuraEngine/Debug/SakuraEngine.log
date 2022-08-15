@@ -1,0 +1,3 @@
+﻿vector_4d.obj : error LNK2005: "public: __thiscall fvector_4d::fvector_4d(float,float,float,float)" (??0fvector_4d@@QAE@MMMM@Z) 已经在 ParallelLightComponent.obj 中定义
+    正在创建库 E:\VisualStudio_Engine\SakuraEngine\Debug\SakuraEngine.lib 和对象 E:\VisualStudio_Engine\SakuraEngine\Debug\SakuraEngine.exp
+E:\VisualStudio_Engine\SakuraEngine\Debug\SakuraEngine.exe : fatal error LNK1169: 找到一个或多个多重定义的符号

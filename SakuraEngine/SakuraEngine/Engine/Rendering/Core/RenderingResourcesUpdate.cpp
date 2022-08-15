@@ -16,11 +16,22 @@ FRenderingResourcesUpdate::~FRenderingResourcesUpdate()
 }
 
 //初始化
-void FRenderingResourcesUpdate::Init(ID3D12Device* InDevice, UINT InElemetSize, UINT InElemetCount)
+void FRenderingResourcesUpdate::Init(ID3D12Device* InDevice, UINT InElemetSize, UINT InElemetCount, bool bConstBuffer)
 {
 	assert(InDevice);
 
-	ElementSize = GetConstantBufferByteSize(InElemetSize);//初始化数据 元素
+	if (bConstBuffer) //判断是否为常量缓冲区
+	{
+		//如果为常量缓冲区   获取常量缓冲区字节大小
+		ElementSize = GetConstantBufferByteSize(InElemetSize);//初始化数据 元素
+	}
+	else
+	{
+		//如果不是常量缓冲区 则直接赋值单个元素大小
+		ElementSize = InElemetSize;
+	}
+
+	
 
 	CD3DX12_HEAP_PROPERTIES HeapPropertie = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);//标明HeapPropertie是上传堆
 	CD3DX12_RESOURCE_DESC ResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(ElementSize * InElemetCount);//元素乘以数量 资源描述

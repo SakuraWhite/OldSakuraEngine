@@ -1,4 +1,5 @@
 #pragma  once 
+#include "../../EngineMinimal.h"
 #include "../../Core/CoreObject/CoreMinimalObject.h"
 
 class CTransformationComponent;

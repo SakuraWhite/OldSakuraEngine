@@ -2,10 +2,73 @@
 #include "../../../public/simple_core_minimal/simple_c_helper_file/simple_file_helper.h"
 #include "../../../public/simple_core_minimal/simple_c_core/simple_c_array/simple_c_array_string.h"
 
+//用于检测ShellExecute的返回值信息
+bool check_ShellExecute_ret(int ret)
+{
+	if (ret == 0)
+	{
+		// 内存不足
+		assert(0, "open_url_w=>insufficient memory.");
+	}
+	else if (ret == 2)
+	{
+		// 文件名错误
+		assert(0, "open_url_w=>File name error.");
+	}
+	else if (ret == 3)
+	{
+		// 路径名错误
+		assert(0, "open_url_w=>Path name error.");
+	}
+	else if (ret == 11)
+	{
+		// EXE 文件无效
+		assert(0, "open_url_w=>Invalid .exe file.");
+	}
+	else if (ret == 26)
+	{
+		// 发生共享错误
+		assert(0, "open_url_w=>A sharing error occurred.");
+	}
+	else if (ret == 27)
+	{
+		// 文件名不完全或无效
+		assert(0, "open_url_w=>incomplete or invalid file name.");
+	}
+	else if (ret == 28)
+	{
+		// 超时
+		assert(0, "open_url_w=>timeout.");
+	}
+	else if (ret == 29)
+	{
+		// DDE 事务失败
+		assert(0, "open_url_w=> DDE transaction failed.");
+	}
+	else if (ret == 30)
+	{
+		// 正在处理其他 DDE 事务而不能完成该 DDE 事务
+		assert(0, "open_url_w=> is processing another DDE transaction and cannot complete the DDE transaction.");
+	}
+	else if (ret == 31)
+	{
+		// 没有相关联的应用程序
+		assert(0, "open_url_w=>no associated application.");
+	}
+
+	return ret <= 32;
+}
+
 void init_def_c_paths(def_c_paths *c_paths)
 {
 	c_paths->index = 0;
 	memset(c_paths->paths,0,sizeof(c_paths->paths) - 1);
+}
+
+void init_def_c_paths_w(def_c_paths_w* c_paths)
+{
+	c_paths->index = 0;
+	memset(c_paths->paths, 0, sizeof(c_paths->paths) - 1);
 }
 
 int copy_file(char *Src, char *Dest)
@@ -37,13 +100,34 @@ int copy_file(char *Src, char *Dest)
 }
 void find_files(char const *in_path, def_c_paths *str, bool b_recursion)
 {
+#ifdef  _WIN64
+	struct _finddatai64_t finddata;
+#else
+#ifdef _WIN32    
 	struct _finddata_t finddata;
+#endif 
+#endif 
 
+#ifdef  _WIN64
+	intptr_t hfile = 0;
+#else
+#ifdef _WIN32    
 	long hfile = 0;
-	char tmp_path[8196] = { 0 };
+#endif 
+#endif 
+	
+	char tmp_path[1024] = { 0 };
 	strcpy(tmp_path, in_path);
 	strcat(tmp_path, "\\*");
-	if ((hfile = _findfirst(tmp_path, &finddata)) != -1)
+	if ((hfile = 
+#ifdef _WIN64
+		_findfirst64
+#else
+#ifdef WIN32	
+		_findfirst
+#endif // _WIN64
+#endif // _WIN32
+		(tmp_path, &finddata)) != -1)
 	{
 		do
 		{
@@ -57,7 +141,7 @@ void find_files(char const *in_path, def_c_paths *str, bool b_recursion)
 						continue;
 					}
 
-					char new_path[8196] = { 0 };
+					char new_path[1024] = { 0 };
 					strcpy(new_path, in_path);
 					strcat(new_path, "\\");
 					strcat(new_path, finddata.name);
@@ -72,9 +156,29 @@ void find_files(char const *in_path, def_c_paths *str, bool b_recursion)
 				strcat(str->paths[str->index++], finddata.name);
 			}
 
-		} while (_findnext(hfile, &finddata) == 0);
+		} while (
+#ifdef _WIN64
+		_findnext64
+#else
+#ifdef _WIN32
+			
+		_findnext
+#endif
+#endif
+			(hfile, &finddata) == 0);
 		_findclose(hfile);
 	}
+}
+
+bool is_file_exists(char const* filename)
+{
+	FILE* file = fopen(filename, "r");
+	if(file)
+	{
+		fclose(file);
+		return true;
+	}
+	return false;
 }
 
 bool create_file(char const *filename)
@@ -119,6 +223,50 @@ bool create_file_directory(char const *in_path)
 	return _access(path, 0) == 0;
 }
 
+bool open_url(const char* url)
+{
+	//宽字符转为窄字符
+	wchar_t path[1024] = { 0 };
+	char_to_wchar_t(path,1024, url);
+
+	return open_url_w(path);
+}
+
+bool open_url_by_param(const char* url, const char* param)
+{
+	//宽字符转为窄字符
+	wchar_t path[1024] = { 0 };
+	char_to_wchar_t(path, 1024, url);
+
+	wchar_t my_param[1024] = { 0 };
+	char_to_wchar_t(my_param, 1024, param);
+	return open_url_by_param_w(path, my_param);
+}
+
+bool open_by_operation(const char* in_operation, const char* url, const char* param)
+{
+	wchar_t my_operation[1024] = { 0 };
+	char_to_wchar_t(my_operation, 1024, in_operation);
+
+	//宽字符转为窄字符
+	wchar_t path[1024] = { 0 };
+	char_to_wchar_t(path, 1024, url);
+
+	wchar_t my_param[1024] = { 0 };
+	char_to_wchar_t(my_param, 1024, param);
+
+	return open_by_operation_w(my_operation,path, my_param);
+}
+
+bool open_explore(const char* url)
+{
+	//宽字符转为窄字符
+	wchar_t path[1024] = { 0 };
+	char_to_wchar_t(path, 1024, url);
+
+	return open_explore_w(path);
+}
+
 bool get_file_buf(const char *path, char *buf)
 {
 	FILE *f = NULL;
@@ -135,6 +283,20 @@ bool get_file_buf(const char *path, char *buf)
 		fclose(f);
 
 		return buf[0] != '\0';
+	}
+
+	return false;
+}
+
+bool save_file_buff(const char* path, char* buf)
+{
+	FILE* f = NULL;
+	if ((f = fopen(path, "w")) != NULL)
+	{
+		fprintf(f, "%s", buf);
+		fclose(f);
+
+		return true;
 	}
 
 	return false;
@@ -241,6 +403,44 @@ bool load_data_from_disk_w(const wchar_t* path, char* buf)
 	}
 
 	return false;
+}
+
+bool is_file_exists_w(const wchar_t* filename)
+{
+	FILE* f = NULL;
+	if ((f = _wfopen(filename, L"r")) != NULL)
+	{
+		fclose(f);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool open_url_w(const wchar_t* url)
+{
+	return open_by_operation_w(L"open", url, NULL);;
+}
+
+bool open_url_by_param_w(const wchar_t* url, const wchar_t* param)
+{
+	return open_by_operation_w(L"open", url, param);;
+}
+
+bool open_by_operation_w(const wchar_t* in_operation, const wchar_t* url, const wchar_t* param)
+{
+	return check_ShellExecute_ret(ShellExecute(NULL,
+		in_operation,
+		url,
+		param,
+		NULL,
+		SW_SHOWNORMAL));
+}
+
+bool open_explore_w(const wchar_t* url)
+{
+	return open_by_operation_w(L"explore", url,NULL);;
 }
 
 unsigned int get_file_size_by_filename_w(const wchar_t* filename)

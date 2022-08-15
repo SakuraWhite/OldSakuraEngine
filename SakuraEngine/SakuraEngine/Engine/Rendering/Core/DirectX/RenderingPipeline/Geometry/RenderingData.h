@@ -3,7 +3,7 @@
 #include "../../../RenderingResourcesUpdate.h"
 
 
-class GMesh;
+class CMeshComponent;
 
 //记录提供渲染相关的内容的接口    
 struct  FRenderingData :public IDirectXDeviceInterfece_Struct //继承自DirectXDeviceInterfece
@@ -22,6 +22,10 @@ public:
 	UINT IndexTypeSize;//Index类型字符大小
 
 public:
+	size_t MeshHash;//mash哈希算法
+	int GeometryKey;//几何Key
+	int MeshObjectIndex;//模型对象索引
+public:
 	UINT GetVertexSizeInBytes() const { return VertexSize * VertexTypeSize; } //直接计算顶点字节大小
 	UINT GetIndexSizeInBytes() const { return IndexSize * IndexTypeSize; }//直接计算Index字节大小
 public:
@@ -30,8 +34,8 @@ public:
 	
 	//临时的视口相关  世界空间坐标 其次裁剪空间坐标 物体空间坐标
 	XMFLOAT4X4 WorldMatrix;//作为世界空间坐标
+	XMFLOAT4X4 TextureTransform;//材质变换矩阵
 
-	GMesh* Mesh;
-
+	CMeshComponent* Mesh;
 	shared_ptr<FRenderingResourcesUpdate> ObjectConstants;
 };

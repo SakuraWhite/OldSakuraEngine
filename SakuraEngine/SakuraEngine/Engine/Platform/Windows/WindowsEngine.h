@@ -6,7 +6,7 @@
 
 class CDirectXRenderingEngine;
 class CWorld;
-
+class CMeshManage;
 
 class CWindowsEngine :public CEngine //CWindowsEngine继承自"Engine.h"中的CEngine
 {
@@ -29,6 +29,10 @@ public://公开的 初始化相关
 	virtual int PostExit(); //退出后的内存释放，也就是收尾
 
 	CDirectXRenderingEngine* GetRenderingEngine() { return RenderingEngine; }
+
+public:
+	CMeshManage* GetMeshManage();
+	CWorld* GetWorld() { return World; }
 
 private: //私有的 初始化窗口相关
 	bool InitWindows(FWinMainCommandParameters InParameters);  //初始化windows窗口

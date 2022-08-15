@@ -30,6 +30,39 @@ ComPtr<ID3D12Device> IDirectXDeviceInterfece::GetD3dDevice()
 	return NULL;
 }
 
+CLightManage* IDirectXDeviceInterfece::GetLightManage()
+{
+	//返回灯光信息  通过渲染引擎进行获取
+	if (CWindowsEngine* InEngine = GetEngine())
+	{
+		if (InEngine->GetRenderingEngine())
+		{
+			return InEngine->GetRenderingEngine()->GetLightManage();
+		}
+	}
+
+	return NULL;
+}
+
+
+
+CMeshManage* IDirectXDeviceInterfece::GetMeshManage()
+{
+	//返回模型信息
+	return GetEngine()->GetMeshManage();
+}
+
+CWorld* IDirectXDeviceInterfece::GetWorld()
+{
+	if (CWindowsEngine* InEngine = GetEngine())
+	{
+		return InEngine->GetWorld();
+	}
+
+	return NULL;
+}
+
+
 ComPtr<ID3D12GraphicsCommandList> IDirectXDeviceInterfece::GetGraphicsCommandList()
 {
 	if (CWindowsEngine* InEngine = GetEngine())
@@ -116,6 +149,22 @@ ComPtr<ID3D12Fence> IDirectXDeviceInterfece_Struct::GetFence()
 ComPtr<ID3D12Device> IDirectXDeviceInterfece_Struct::GetD3dDevice()
 {
 	return Interfece.GetD3dDevice();
+}
+
+
+CLightManage* IDirectXDeviceInterfece_Struct::GetLightManage()
+{
+	return Interfece.GetLightManage();
+}
+
+CMeshManage* IDirectXDeviceInterfece_Struct::GetMeshManage()
+{
+	return Interfece.GetMeshManage();
+}
+
+CWorld* IDirectXDeviceInterfece_Struct::GetWorld()
+{
+	return Interfece.GetWorld();
 }
 
 ComPtr<ID3D12GraphicsCommandList> IDirectXDeviceInterfece_Struct::GetGraphicsCommandList()

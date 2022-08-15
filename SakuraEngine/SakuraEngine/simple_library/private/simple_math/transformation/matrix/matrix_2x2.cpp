@@ -13,7 +13,7 @@ fmatrix_2x2::fmatrix_2x2(float in_m11, float in_m12, float in_m21, float in_m22)
 {
 }
 
-float fmatrix_2x2::Determinant()
+float fmatrix_2x2::Determinant() const
 {
 	return m11*m22 - m12*m21;
 }

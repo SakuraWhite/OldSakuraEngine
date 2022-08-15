@@ -11,7 +11,14 @@
 #include "../../../../Mesh/CustomMesh.h"
 #include "../../../../Core/CoreObject/CoreMinimalObject.h"
 #include "../../../../Core/World.h"
+#include "../../../../Component/Mesh/Core/MeshComponent.h"
 #include "../../../../Mesh/Core/MeshManage.h"
+#include "../../../../Mesh/Core/Material/Material.h"
+#include "../../../../Manage/LightManage.h"
+#include "../../../../Actor/Light/ParallelLight.h"
+#include "../../../../Actor/Light/SpotLight.h"
+#include "../../../../Actor/Light/PointLight.h"
+
 
 #if defined(_WIN32)
 #include "../../../../Core/WinMainCommandParameters.h"
@@ -39,12 +46,16 @@ CDirectXRenderingEngine::CDirectXRenderingEngine()
 
 	bTick = false;
 
-	MeshManage = new CMeshManage();
+	MeshManage = CreateObject<CMeshManage>(new CMeshManage());//创建新的模型信息
+	LightManage = CreateObject<CLightManage>(new CLightManage());//创建新的灯光信息
 }
 
 CDirectXRenderingEngine::~CDirectXRenderingEngine()
 {
+	//析构之后删除
 	delete MeshManage;
+	delete LightManage;
+
 }
 
 int CDirectXRenderingEngine::PreInit(FWinMainCommandParameters InParameters)
@@ -74,40 +85,498 @@ int CDirectXRenderingEngine::PostInit()
 	ANALYSIS_HRESULT(GraphicsCommandList->Reset(CommandAllocator.Get(), NULL));
 	{
 		//构建Mesh
-		// BOX 盒子
-		if (GMesh* BoxMesh = MeshManage->CreateBoxMesh(4.f, 3.f, 1.5f))
-		{
-			BoxMesh->SetPosition(XMFLOAT3(5, 2, 5));
-			BoxMesh->SetRotation(fvector_3d(60.f, 1.f, 20.f));
-			BoxMesh->SetScale(fvector_3d(3.f, 3.f, 3.f));
-		}
-		//	GBoxMesh* Box = GBoxMesh::CreateMesh(4.f, 3.f, 1.5f);
-		
-		//ConeMesh 圆锥
-		//	MeshManage ->CreateConeMesh(1.f, 5.f, 20, 20);
-		//	GConeMesh* ConeMesh = GConeMesh::CreateMesh(1.f, 5.f, 20, 20);
-
 		// 自定义  注意顺序
 		//	string MeshObjPath = "../../Mesh/EDMesh.obj";
 		//	MeshManage->CreateMesh(MeshObjPath);
-			
-		// Cylinder 圆柱体
-		//  MeshManage ->CreateCylinderMesh(1.f, 1.f, 5.f, 20, 20);
-		//GCylinderMesh* CylinderMesh = GCylinderMesh::CreateMesh(1.f,1.f,5.f,20,20);
-		
-		// Plane 面片
-		 MeshManage->CreatePlaneMesh(4.f, 3.f, 20, 20);
-		//GPlaneMesh PlaneMesh =GPlaneMesh:: PlaneMesh(4.f, 3.f, 20, 20);
-				
-		//Sphere 球体
-		if (GMesh* SphereMesh = MeshManage->CreateSphereMesh(2.f, 20, 20)) //获取球体 并对球体位置进行变更
-		{
-			SphereMesh->SetPosition(XMFLOAT3(10,20,40));//对模型位置进行设置
 
+		//创建点光源
+		//if (GPointLight* PointLight = World->CreateActorObject<GPointLight>())
+		//{	
+		//	//位置 旋转 缩放
+		//	PointLight->SetPosition(XMFLOAT3(0.f, 5.f, -10.f));
+		//	PointLight->SetRotation(fvector_3d(0.f, 0.f, 0.f));
+		//
+		//	//强度 衰减范围控制
+		//	PointLight->SetLightIntensity(fvector_3d(10.f, 10.f, 10.f));
+		//	//点光源衰减起始终点
+		//	PointLight->SetEndAttenuation(150.f);
+		//}
+
+		//聚灯光生成
+		//if (GSpotLight* SpotLight = World->CreateActorObject<GSpotLight>())
+		//{
+		//	//位置 旋转 缩放
+		//	SpotLight->SetPosition(XMFLOAT3(0.f, 10.f, 10.f));
+		//	SpotLight->SetRotation(fvector_3d(0.f, 0.f, 0.f));
+		//
+		//	//强度 衰减范围控制
+		//	SpotLight->SetLightIntensity(fvector_3d(1.5f, 1.5f, 1.5f));
+		//	//点光源衰减起始点
+		//	SpotLight->SetStartAttenuation(1.f);
+		//	//点光源衰减终点
+		//	SpotLight->SetEndAttenuation(130.f);
+		//
+		//	//聚光灯内圈半径设置
+		//	SpotLight->SetConicalInnerCorner(40.f);
+		//	//聚光灯外圈半径设置
+		//	SpotLight->SetConicalOuterCorner(60.f);
+		//}
+
+		//创建平行光光1  平行光（太阳光）
+		if (GParallelLight* ParallelLight = World->CreateActorObject<GParallelLight>())
+		{
+			ParallelLight->SetPosition(XMFLOAT3(10.f, -10.f, 0.f));
+			ParallelLight->SetRotation(fvector_3d(0.f, 0.f, 0.f));
+
+			ParallelLight->SetLightIntensity(fvector_3d(1.1f, 1.1f, 1.1f));
 		}
-		//GSphereMesh* SphereMesh = GSphereMesh::CreateMesh(2.f, 20, 20);
+		////创建平行光光2
+		//if (GParallelLight* ParallelLight = World->CreateActorObject<GParallelLight>())
+		//{
+		//	ParallelLight->SetPosition(XMFLOAT3(0.f, -10.f, 10.f));
+		//	ParallelLight->SetRotation(fvector_3d(-90.f, 0.f, 0.f));
+		//}
+
+
+		// Plane 面片									
+		if (GPlaneMesh* InPlaneMesh = World->CreateActorObject<GPlaneMesh>())
+		{
+			//设置面片的            XY轴的长度  XY轴的段数
+			InPlaneMesh->CreateMesh(4.f, 3.f, 20, 20);
+
+			//对模型位置进行设置
+			InPlaneMesh->SetPosition(XMFLOAT3(0.f, -12.f, 0.f));
+			//对模型旋转进行设置
+			InPlaneMesh->SetRotation(fvector_3d(0.f, 0.f, 0.f));
+			//对模型缩放进行设置
+			InPlaneMesh->SetScale(fvector_3d(50.f, 50.f, 50.f));
+
+			if (CMaterial* InMaterial = (*InPlaneMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(1.f));//设置模型颜色
+				InMaterial->SetMaterialType(EMaterialType::Lambert); 
+
+			}
+		}
+
+		//box模型
+		if (GBoxMesh* InBoxMesh = World->CreateActorObject<GBoxMesh>())
+		{
+			InBoxMesh->CreateMesh(5.f, 5.f, 5.f);
+
+			InBoxMesh->SetPosition(XMFLOAT3(22.f, -10.f, 20.f));
+			InBoxMesh->SetScale(fvector_3d(1));
+			if (CMaterial* InMaterial = (*InBoxMesh->GetMaterials())[0])
+			{
+				//	InMaterial->SetBaseColor(fvector_4d(0.5f));
+				InMaterial->SetMaterialType(EMaterialType::HalfLambert);
+			}
+		}
+
+		//Sphere 球体 
+		// 兰伯特	Lambert	
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>()) //获取球体 
+		{
+			//设置球体的           半径 X轴与Y轴段数 
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-3.f, 2.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(0.5f, 0.5f, 0.6f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::Lambert);//设置模型套用的材质类型
+			}
+		}
+
+		//半兰伯特 HalfLambert
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>()) //获取球体 
+		{
+			//设置球体的           半径 X轴与Y轴段数
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(3.f, 2.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(
+					221.f / 255.f,
+					154.f / 255.f,
+					255.f / 255.f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::HalfLambert);//设置模型套用的材质类型
+			}
+		}
+
+		//冯 Phong
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(9.f, 2.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(0.5f, 0.5f, 0.5f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::Phong);//设置模型套用的材质类型
+				InMaterial->SetSpecular(fvector_3d(1.f));
+				InMaterial->SetRoughness(0.8f);
+			}
+		}
+
+		//布林冯 BinnPhong
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(9.f, 7.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(
+					220.f / 255.f,
+					223.f / 255.f,
+					227.f / 255.f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::BinnPhong);//设置模型套用的材质类型
+				InMaterial->SetSpecular(fvector_3d(1.f));
+				InMaterial->SetRoughness(0.3f);
+			}
+		}
+
+		//WrapLight 皮肤
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-3.f, 7.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(0.5f, 0.5f, 0.5f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::Wrap);//设置模型套用的材质类型 
+				InMaterial->SetRoughness(0.95f);//设置粗糙度来控制高光
+			}
+		}
+
+		//Minnaert Lighting 布料 丝袜
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-9.f, 7.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(0.5f, 0.5f, 0.5f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::Minnaert);//设置模型套用的材质类型  
+				InMaterial->SetRoughness(0.8f);//设置粗糙度来控制高光
+			}
+		}
+
+		//AnisotropyKajiyaKay   各向异性
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-9.f, 2.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(0.7f, 0.7f, 1.5f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::AnisotropyKajiyaKay);//设置模型套用的材质类型  
+				InMaterial->SetRoughness(0.8f);//设置粗糙度来控制高光
+			}
+		}
+
+		//   Banded 基础卡通
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-9.f, 12.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(0.7f, 0.7f, 1.5f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::Banded);//设置模型套用的材质类型  
+			}
+		}
+
+		//GradualBanded 具有渐变的卡通材质
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-3.f, 12.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(
+					247.f / 255.f,
+					150.f / 255.f,
+					85.f / 255.f,
+					1.0f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::GradualBanded);//设置模型套用的材质类型  
+			}
+		}
+
+		//FinalBanded 混合多种效果的卡通材质  (基础反射 渐变颜色 高光等)
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(3.f, 12.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(
+					213.f / 255.f,
+					132.f / 255.f,
+					234.f / 255.f,
+					1.0f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::FinalBanded);//设置模型套用的材质类型  
+				InMaterial->SetSpecular(fvector_3d(1.f, 1.f, 1.f));//设置高光颜色
+				InMaterial->SetRoughness(0.6f);//设置粗糙度来控制高光
+			}
+		}
+
+		//BackLight 玉的投射效果  次表面散射
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(9.f, 12.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(
+					2.f / 255.f,
+					214.f / 255.f,
+					17.f / 255.f,
+					1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::BackLight);//设置模型套用的材质类型  
+
+				InMaterial->SetRoughness(0.2f);//设置粗糙度来控制高光
+			}
+		}
+
+		//OrenNayar GDC 类沙漠粗糙表面效果
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-9.f, 18.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(
+					0.7,
+					0.7,
+					1.4,
+					1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::OrenNayar);//设置模型套用的材质类型  
+				InMaterial->SetRoughness(0.7f);//粗糙度为0时 则为兰伯特
+			}
+		}
+
+
+
+		//菲涅尔
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(3.f, 7.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(0.5f, 0.5f, 0.5f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::Fresnel);//设置模型套用的材质类型 这里是在兰伯特基础上加上冯的高光
+				InMaterial->SetRoughness(0.95f);//设置粗糙度来控制高光
+			}
+		}
+
+		//基础线框模式 模型材质显示
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(9.f, 18.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(1.f, 1.f, 1.f, 1.f));//设置模型基本颜色
+
+				InMaterial->SetMaterialDisplayStatus(EMaterialDisplayStatusType::WireframeDisplay);//模型显示模式为线框显示
+			
+				InMaterial->SetMaterialType(EMaterialType::BaseColor);//不受光 只显示基本颜色
+			}
+		}
+
+		//基础顶点模式 模型材质显示
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-3.f, 18.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(1.f, 1.f, 1.f, 1.f));//设置模型基本颜色
+
+				InMaterial->SetMaterialDisplayStatus(EMaterialDisplayStatusType::PointDisplay);//模型显示模式为顶点显示
+			
+				InMaterial->SetMaterialType(EMaterialType::BaseColor);//不受光 只显示基本颜色
+			}
+		}
+
+
+		//只显示局部法线效果
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(3.f, 18.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetMaterialType(EMaterialType::Normal);//不受光 只显示局部法线
+			}
+		}
+
+		//只显示世界法线效果
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(3.f, 24.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetMaterialType(EMaterialType::WorldNormal);//不受光 只显示世界法线
+			}
+		}
+
+		//只显示纹理贴图 方法1(直接指定材质ID)
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			//					半径   XY轴细分
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-9.f, -3.f, 0.f));
+			//旋转
+			SphereMesh->SetRotation(fvector_3d(0.f, -90.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor("Earth");//设置基本颜色贴图
+				InMaterial->SetSpecular(fvector_3d(1.f, 1.f, 1.f));//设置高光颜色
+				InMaterial->SetBaseColor(fvector_4d(1.f, 1.f, 1.f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::BinnPhong);
+			}
+		}
+
+		//只显示纹理贴图 方法2(使用路径指定贴图资源)
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			//					半径   XY轴细分
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(-3.f, -3.f, 0.f));
+			//旋转
+			SphereMesh->SetRotation(fvector_3d(0.f, -90.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor("../SakuraEngine/Asset/Texture/MMOARPG.dds");//设置基本颜色贴图
+				InMaterial->SetNormal("../SakuraEngine/Asset/Texture/MMOARPG_NRM.dds");//设置基本颜色贴图
+				InMaterial->SetBaseColor(fvector_4d(1.f, 1.f, 1.f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::Lambert);
+			}
+		}
+
+		//只显示纹理贴图 方法3(在路径中遍历文件)
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			//					半径   XY轴细分
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(3.f, -3.f, 0.f));
+			//旋转
+			SphereMesh->SetRotation(fvector_3d(0.f, -90.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor("Texture'/Project/Texture/Wood.Wood'");//设置基本颜色贴图
+				InMaterial->SetNormal("Texture'/Project/Texture/Wood_NRM.Wood_NRM'");//设置基本颜色贴图
+				InMaterial->SetBaseColor(fvector_4d(1.f, 1.f, 1.f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::Lambert);
+			}
+		}
+
+		//只显示法线贴图
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			//					半径   XY轴细分
+			SphereMesh->CreateMesh(2.f, 50, 50);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(9.f, -3.f, 0.f));
+			//旋转
+			SphereMesh->SetRotation(fvector_3d(0.f, -90.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor("Wood2");//设置颜色
+				InMaterial->SetNormal("Wood2_Nor");//设置法线贴图
+				InMaterial->SetSpecular("Wood2_SPEC");
+				InMaterial->SetBaseColor(fvector_4d(1.f, 1.f, 1.f, 1.f));//设置模型基本颜色
+				InMaterial->SetMaterialType(EMaterialType::BinnPhong);
+
+			}
+		}
+
+		//透明
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())//透明
+		{
+			//注册渲染层级									设置位透明层
+			SphereMesh->SetMeshRenderLayerType(EMeshRenderLayerType::RENDERLAYER_TRANSPARENT);
+
+			//					半径   XY轴细分
+			SphereMesh->CreateMesh(2.f, 100, 100);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(15.f, 7, 0.f));
+			//旋转
+			SphereMesh->SetRotation(fvector_3d(0.f, 0.f, 0.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor("TransparentContent");//设置颜色贴图
+				InMaterial->SetMaterialType(EMaterialType::HalfLambert);
+			}
+		}
+
+
+		//环境光贴图
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
+		{
+			//									 法线反转是否开启
+			SphereMesh->CreateMesh(2.f, 100, 100, true);
+			//设置位置
+			SphereMesh->SetPosition(XMFLOAT3(0.f, 0.f, 0.f));
+			//SphereMesh->SetRotation(fvector_3d(0.f, 90.f, 0.f));
+			//设置缩放
+			SphereMesh->SetScale(fvector_3d(4000.f));
+			//对模型材质进行设置
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor("EpicQuadPanorama_CC");//设置颜色贴图
+				InMaterial->SetSpecular(fvector_3d(1.f));//设置高光
+				InMaterial->SetMaterialType(EMaterialType::BaseColor);
+			}
+		}
 
 	}
+
+
 	//渲染模型
 	MeshManage->BuildMesh();
 	//提交录入初始化

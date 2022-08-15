@@ -9,6 +9,8 @@ struct FViewportTransformation
 {
 	FViewportTransformation(); //初始化一下值
 
+	XMFLOAT4 ViewportPosition;//摄像机位置暴漏给shader
+
 	XMFLOAT4X4 ViewProjectionMatrix;//视图投影透视矩阵
 
 };

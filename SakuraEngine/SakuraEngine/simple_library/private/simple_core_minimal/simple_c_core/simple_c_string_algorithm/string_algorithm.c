@@ -15,6 +15,84 @@ void remove_char_end(char *str, char sub_str)
 	}
 }
 
+bool c_str_contain(const char* buff_str, const char* sub_str)
+{
+	return find_string(buff_str, sub_str,0) != -1;
+}
+
+void SIMPLE_LIBRARY_API trim_start_and_end_inline(char* buff)
+{
+	trim_start_inline(buff);
+	trim_end_inline(buff);
+}
+
+void trim_start_inline(char* buff)
+{
+	int pos = find_string(buff," ",0);
+	int index = 0;
+	if (pos == 0)
+	{
+		while (pos == index)
+		{
+			index++;
+			pos = find_string(buff, " ", index);
+		}
+
+		int buff_len = strlen(buff);
+		for (int i = index; i < buff_len; i++)
+		{
+			buff[i - index] = buff[i];
+		}
+
+		//填充最后 0
+		for (int i = 1; i <= index; i++)
+		{
+			buff[buff_len - i] = '\0';
+		}
+	}
+}
+
+void trim_end_inline(char* buff)
+{
+	int buff_len = strlen(buff);
+	int pos = find_string_from_end(buff, " ", 0);
+	int index = 1;
+
+	if (buff_len > 0)
+	{
+		if (pos == (buff_len - index))
+		{
+			buff[buff_len - index] = '\0';
+
+			trim_end_inline(buff);
+		}
+	}
+}
+
+bool split(const char* buf,const char* str_split, char* l, char* r, bool bcontain_str_split)
+{
+	int pos = find_string(buf, str_split,0);
+	if (pos !=-1 )
+	{
+		int str_split_len = 0;
+		if (!bcontain_str_split)
+		{
+			str_split_len = strlen(str_split);
+		}
+
+		int buf_len = strlen(buf);
+
+		strncpy(l, buf, pos);
+
+		int nest_pos = pos + str_split_len;
+		strncpy(r, &buf[nest_pos], buf_len - nest_pos);
+
+		return true;
+	}
+
+	return false;
+}
+
 void remove_all_char_end(char *str, char sub_str)
 {
 	int len = strlen(str);
@@ -25,6 +103,34 @@ void remove_all_char_end(char *str, char sub_str)
 		{
 			strcpy(&str[i], &str[i + 1]);
 		}
+	}
+}
+
+void replace_string_inline(
+	char* str, 
+	const char* sub_char_a,
+	const char* sub_char_b)
+{
+	int str_size = strlen(str);
+	int sub_char_a_size = strlen(sub_char_a);
+	int sub_char_b_size = strlen(sub_char_b);
+
+	int index = find_string(str, sub_char_a, 0);
+	if (index != -1)
+	{
+		char buff1[8196] = { 0 };
+		char buff2[8196] = { 0 };
+
+		int end_size = str_size + (index - 1);
+		strcpy(buff1, &str[index + sub_char_a_size]);
+
+		memset(&str[index], 0, end_size);
+
+		get_printf_s(buff2, "%s%s%s", str, sub_char_b, buff1);
+
+		memset(str, 0, str_size * sizeof(wchar_t));
+
+		strcpy(str, buff2);
 	}
 }
 
@@ -86,6 +192,33 @@ void remove_string_start(char *str, char const* sub_str)
 	}
 }
 
+int find_string_from_end(const char* str, char const* sub_str, int start_pos)
+{
+	int str_len = strlen(str);
+	int len = strlen(sub_str);
+	int index = -1;
+	for (int i = (str_len - start_pos); str[i] != str[0]; i--)
+	{
+		if (sub_str[0] == str[i])
+		{
+			int tmp_index = i;
+			int l = 1;//第一个是成功
+			while (sub_str[l] == str[i + l] && sub_str[l] != '\0')
+			{
+				l++;
+			}
+
+			if (len == l)
+			{
+				index = tmp_index;
+				break;
+			}
+		}
+	}
+
+	return index;
+}
+
 void replace_char_inline(char *str, const char sub_char_a, const char sub_char_b)
 {
 	int index = find_string(str, &sub_char_a, 0);
@@ -96,7 +229,7 @@ void replace_char_inline(char *str, const char sub_char_a, const char sub_char_b
 	}
 }
 
-int get_printf(char *buf, char *format, ...)
+int get_printf(char *buf, const char *format, ...)
 {
 	va_list param_list;
 	va_start(param_list, format);
@@ -157,21 +290,21 @@ int get_printf(char *buf, char *format, ...)
 	return strlen(buf) + 1;
 }
 
-int get_printf_s(char *out_buf, char *format, ...)
+int get_printf_s(char *out_buf, const char *format, ...)
 {
-	char buf[8196 * 1024] = { 0 };
-	memset(buf, 0,sizeof(char) * 8196 * 1024);
+	char buf[SIMPLE_C_BUFF_SIZE] = { 0 };
+	memset(buf, 0,sizeof(char) * SIMPLE_C_BUFF_SIZE);
 	va_list args;
 	va_start(args, format);
-	_vsnprintf_s(buf, 8196 * 1024 - 1, 8196 * 1024, format, args);
+	_vsnprintf_s(buf, SIMPLE_C_BUFF_SIZE - 1, SIMPLE_C_BUFF_SIZE, format, args);
 	va_end(args);
-	buf[8196 * 1024 - 1] = 0;
+	buf[SIMPLE_C_BUFF_SIZE - 1] = 0;
 
 	strcat(out_buf, buf);
 	return strlen(out_buf) + 1;
 }
 
-int get_printf_s_s(int buffer_size, char *out_buf, char *format, ...)
+int get_printf_s_s(int buffer_size, char *out_buf, const char *format, ...)
 {
 	char *buf = (char*)malloc(buffer_size);
 	memset(buf, 0, sizeof(char) *buffer_size);
@@ -297,7 +430,35 @@ void wreplace_wchar_inline(wchar_t *str, const wchar_t sub_char_a, const wchar_t
 	}
 }
 
-int wget_printf(wchar_t *buf, wchar_t *format, ...)
+void wreplace_string_inline(
+	wchar_t* str, 
+	const wchar_t* sub_char_a,
+	const wchar_t* sub_char_b)
+{
+	int str_size = wcslen(str);
+	int sub_char_a_size = wcslen(sub_char_a);
+	int sub_char_b_size = wcslen(sub_char_b);
+
+	int index = wfind_string(str, sub_char_a, 0);
+	if (index != -1)
+	{
+		wchar_t buff1[8196] = { 0 };
+		wchar_t buff2[8196] = { 0 };
+
+		int end_size = str_size  + (index - 1);
+		wcscpy(buff1, &str[index + sub_char_a_size]);
+
+		memset(&str[index], 0, end_size * sizeof(wchar_t));
+
+		wget_printf_s(buff2, L"%s%s%s", str, sub_char_b, buff1);
+
+		memset(str, 0, str_size * sizeof(wchar_t));
+
+		wcscpy(str, buff2);
+	}
+}
+
+int wget_printf(wchar_t *buf, const wchar_t *format, ...)
 {
 	va_list param_list;
 	va_start(param_list, format);
@@ -362,21 +523,21 @@ int wget_printf(wchar_t *buf, wchar_t *format, ...)
 	return wcslen(buf) + 1;
 }
 
-int wget_printf_s(wchar_t *out_buf, wchar_t *format, ...)
+int wget_printf_s(wchar_t *out_buf,const wchar_t *format, ...)
 {
-	wchar_t *buf[8196 * 1024] = { 0 };
-	wmemset(buf, 0, sizeof(wchar_t) * 8196 * 1024);
+	wchar_t *buf[SIMPLE_C_BUFF_SIZE] = { 0 };
+	wmemset(buf, 0, sizeof(wchar_t) * SIMPLE_C_BUFF_SIZE);
 	va_list args;
 	va_start(args, format);
-	_vsnwprintf_s(buf, 8196 * 1024 - 1, 8196 * 1024, format, args);
+	_vsnwprintf_s(buf, SIMPLE_C_BUFF_SIZE - 1, SIMPLE_C_BUFF_SIZE, format, args);
 	va_end(args);
-	buf[8196 * 1024 - 1] = 0;
+	buf[SIMPLE_C_BUFF_SIZE - 1] = 0;
 
 	wcscat(out_buf, buf);
 	return wcslen(out_buf) + 1;
 }
 
-int wget_printf_s_s(int buffer_size, wchar_t *out_buf, wchar_t *format, ...)
+int wget_printf_s_s(int buffer_size, wchar_t *out_buf, const wchar_t *format, ...)
 {
 	int size = buffer_size / sizeof(wchar_t);
 	wchar_t *buf = (wchar_t*)malloc(buffer_size);

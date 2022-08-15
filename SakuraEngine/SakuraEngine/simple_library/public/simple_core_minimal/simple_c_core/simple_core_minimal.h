@@ -47,3 +47,9 @@
 #include <time.h>
 #include <wchar.h>
 #include <process.h>
+#include <shellapi.h>
+#include <corecrt_wstring.h>
+
+//#include <array>
+
+#define SIMPLE_C_BUFF_SIZE 8196 //如果嫌小就给大点

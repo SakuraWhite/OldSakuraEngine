@@ -1,8 +1,18 @@
 #include "../../../../public/simple_math/transformation/matrix/matrix_4x4.h"
+#include "../../../../public/simple_math/transformation/matrix/matrix_3x3.h"
 
 fmatrix_4x4::fmatrix_4x4()
 {
     *this = identity();
+}
+
+fmatrix_4x4::fmatrix_4x4(const fmatrix_3x3& in_matrix)
+    : m11(in_matrix.m11), m12(in_matrix.m12), m13(in_matrix.m13), m14(0.f)
+    , m21(in_matrix.m21), m22(in_matrix.m22), m23(in_matrix.m23), m24(0.f)
+    , m31(in_matrix.m31), m32(in_matrix.m32), m33(in_matrix.m33), m34(0.f)
+    , m41(0.f),           m42(0.f),           m43(0.f),           m44(1.f)
+{
+
 }
 
 fmatrix_4x4::fmatrix_4x4(
@@ -18,6 +28,39 @@ fmatrix_4x4::fmatrix_4x4(
 
 }
 
+float fmatrix_4x4::determinant()const
+{
+   //ÏÈ½µÎ¬
+    //m11
+    float m11_algebraic_cofactor = fmatrix_3x3(
+        m22, m23, m24,
+        m32, m33, m34,
+        m42, m43, m44).Determinant();
+   
+    //m12
+    float m12_algebraic_cofactor = fmatrix_3x3(
+        m21, m23, m24,
+        m31, m33, m34,
+        m41, m43, m44).Determinant();
+    
+    //m13
+    float m13_algebraic_cofactor = fmatrix_3x3(
+        m21, m22, m24,
+        m31, m32, m34,
+        m41, m42, m44).Determinant();
+    
+    //m14
+    float m14_algebraic_cofactor = fmatrix_3x3(
+        m21, m22, m23,
+        m31, m32, m33,
+        m41, m42, m43).Determinant();
+
+    return  m11 * m11_algebraic_cofactor -
+            m12 * m12_algebraic_cofactor +
+            m13 * m13_algebraic_cofactor -
+            m14 * m13_algebraic_cofactor;
+}
+
 fmatrix_4x4 fmatrix_4x4::identity()
 {
     return fmatrix_4x4(
@@ -25,4 +68,31 @@ fmatrix_4x4 fmatrix_4x4::identity()
     0.f, 1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
     0.f, 0.f, 0.f, 1.f);
+}
+
+void fmatrix_4x4::transpose()
+ {
+    *this = to_transpose();
+}
+
+fmatrix_4x4 fmatrix_4x4::to_transpose()
+{
+    fmatrix_4x4 matrix_4x4 = *this;
+
+    //½»»»º¯Êý
+    auto swap_float = [](float& a, float& b)
+    {
+        float tmp = a;
+        a = b;
+        b = tmp;
+    };
+
+    swap_float(matrix_4x4.m21, matrix_4x4.m12);
+    swap_float(matrix_4x4.m31, matrix_4x4.m13);
+    swap_float(matrix_4x4.m41, matrix_4x4.m14);
+    swap_float(matrix_4x4.m32, matrix_4x4.m23);
+    swap_float(matrix_4x4.m42, matrix_4x4.m24);
+    swap_float(matrix_4x4.m43, matrix_4x4.m34);
+
+    return matrix_4x4;
 }

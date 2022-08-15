@@ -5,9 +5,9 @@ CTransformationComponent::CTransformationComponent()
 	,Rotation		(0.f, 0.f, 0.f) //物体旋转初始化
 	,Scale			(1.f, 1.f, 1.f) //物体缩放初始化
 
-	,RightVector	(1.f, 0.f, 0.f) //物体右方朝向初始化
-	,UPVector		(0.f, 1.f, 0.f) //物体上方朝向初始化
-	,ForwardVector	(0.f, 0.f, 1.f) //物体正面朝向初始化
+	,RightVector	(1.f, 0.f, 0.f) //物体右方朝向初始化 当前的X轴
+	,UPVector		(0.f, 1.f, 0.f) //物体上方朝向初始化 当前的Y轴
+	,ForwardVector	(0.f, 0.f, 1.f) //物体正面朝向初始化 当前的Z轴
 {
 
 
@@ -54,12 +54,12 @@ void CTransformationComponent::SetForwardVector(const XMFLOAT3& InForwardVector)
 	ForwardVector = InForwardVector;
 }
 
-void CTransformationComponent::SetRightVevtor(const XMFLOAT3& InRightVevtor)
+void CTransformationComponent::SetRightVector(const XMFLOAT3& InRightVevtor)
 {
 	RightVector = InRightVevtor;
 }
 
-void CTransformationComponent::SetUPVevtor(const XMFLOAT3& InUPVevtor)
+void CTransformationComponent::SetUPVector(const XMFLOAT3& InUPVevtor)
 {
 	UPVector = InUPVevtor;
 }

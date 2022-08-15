@@ -4,6 +4,7 @@
 
 GActorObject::GActorObject()
 {
+	//创建对象
 	TransformationComponent = CreateObject<CTransformationComponent>(new CTransformationComponent());
 }
 

@@ -1,11 +1,11 @@
 #include "ConstantBufferViews.h"
 
 
-void FConstantBufferViews::CreateConstant(UINT ObjectSize, UINT ObjectCount)
+void FConstantBufferViews::CreateConstant(UINT ObjectSize, UINT ObjectCount, bool bConstBuffer)
 {
 	Constant = make_shared<FRenderingResourcesUpdate>();//制造共享
 
-	Constant->Init(GetD3dDevice().Get(), ObjectSize, ObjectCount);//初始化创造的常量缓冲区
+	Constant->Init(GetD3dDevice().Get(), ObjectSize, ObjectCount, bConstBuffer);//初始化创造的常量缓冲区
 }
 
 void FConstantBufferViews::Update(int Index, const void* InData)
@@ -14,7 +14,7 @@ void FConstantBufferViews::Update(int Index, const void* InData)
 	Constant->Update(Index, InData);
 }
 
-void FConstantBufferViews::BuildConstantBuffer(
+void FConstantBufferViews::BuildMeshConstantBuffer(
 	CD3DX12_CPU_DESCRIPTOR_HANDLE InHandle, 
 	UINT InConstantBufferNum,
 	UINT InHandleOffset)

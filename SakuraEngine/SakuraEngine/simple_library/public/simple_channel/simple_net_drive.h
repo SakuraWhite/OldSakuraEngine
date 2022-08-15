@@ -4,13 +4,14 @@
 #include "simple_net_type.h"
 #include "simple_core/simple_connetion.h"
 #include "../simple_cpp_core_minimal/simple_cpp_core_minimal.h"
+#include "../simple_library_macro.h"
 
-class FSimpleNetDrive
+class SIMPLE_LIBRARY_API FSimpleNetDrive
 {
 public:
 	FSimpleNetDrive();
 
-	static FSimpleNetDrive* GetNetDrive(ESimpleSokcetType InSokcetType, ESimpleDriveType InDriveType);
+	static FSimpleNetDrive* GetNetDrive(ESimpleSocketType InSokcetType, ESimpleDriveType InDriveType);
 
 	virtual bool Init();
 

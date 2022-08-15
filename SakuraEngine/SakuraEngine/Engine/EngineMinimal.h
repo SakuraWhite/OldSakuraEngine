@@ -15,6 +15,7 @@
 #include <wrl.h>				 //windows提供的一些智能指针与事件的库
 #include <dxgi1_4.h>			 //提供了一些接口，比如DXGL适配器与DXGL接口
 #include "Rendering/DirectX12/d3dx12.h"		//在本渲染器中文件中Rending的DX12文件夹中的额外包含的头文件，是微软自己写的扩展库
+#include "Rendering/DirectX12/DDSTextureLoader.h"//微软的关于DDS纹理压缩格式的库
 #include <D3Dcompiler.h>		 //用来编译着色代码的Direct3D库
 #include <DirectXMath.h>		 //DirectX自己封装的Math库，用来进行一些计算,已经封装好常用的数学API
 #include <DirectXPackedVector.h> //用作计算向量相关的库

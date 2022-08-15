@@ -44,10 +44,10 @@ public:
 	virtual void MoveForward(float InValue);//前进后退
 	virtual void MoveRight(float InValue);//前进后退
 protected:
+	//绕着X轴旋转
+	void RotateAroundXAxis(float InRotateDegrees);
 	//绕着Y轴旋转
 	void RotateAroundYAxis(float InRotateDegrees);
-	//绕着Z轴旋转
-	void RotateAroundZAxis(float InRotateDegrees);
 public:
 
 	//使用FORCEINLINE来暴漏一些参数接口 作为键盘或者鼠标输入的相应   FORCEINLINE是属于windows平台定义的内容 需要包含关与windows平台

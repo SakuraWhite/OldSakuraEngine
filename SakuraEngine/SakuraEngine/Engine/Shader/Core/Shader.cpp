@@ -11,13 +11,17 @@ SIZE_T FShader::GetBufferSize() const
 	return ShaderCode->GetBufferSize();
 }
 
-void FShader::BuildShaders(const wstring& InFinleName,const string& InEntryFunName,const string& InShadersVersion)//接口 通过接口区去编译Shader代码
+void FShader::BuildShaders(			//接口 通过接口区去编译Shader代码
+	const wstring& InFinleName,		//输入接口名称
+	const string& InEntryFunName,	//输入入口名字
+	const string& InShadersVersion,	//输入着色器版本
+	const D3D_SHADER_MACRO* InShaderMacro) //shader中贴图容器 宏	
 {
 	//创建二进制报错 ShaderError
 	ComPtr<ID3DBlob> ErrorShaderMsg;
 	HRESULT R = D3DCompileFromFile(					//DX12的API
 		InFinleName.c_str(), //转化为宽字符
-		NULL,	 //聚集定义阵列的指标
+		InShaderMacro,	 //传入定义的宏
 		D3D_COMPILE_STANDARD_FILE_INCLUDE, //include如何去处理 也就是Shader如何去处理当前所包含的文件
 		InEntryFunName.c_str(), //定义入口名字
 		InShadersVersion.c_str(),//定义目标   也就是Shader版本
@@ -34,6 +38,9 @@ void FShader::BuildShaders(const wstring& InFinleName,const string& InEntryFunNa
 	if (ErrorShaderMsg)   //如果上面Sahder二进制报错 那么打印这个报错
 	{
 		Engine_Log_Error("%s", (char*)ErrorShaderMsg->GetBufferPointer());
+
+		//自动打开日志
+		//open_url(get_log_filename());
 	}
 	//失败就会崩溃
 	ANALYSIS_HRESULT(R);

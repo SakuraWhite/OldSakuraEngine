@@ -4,11 +4,19 @@
 
 #include "../../../../public/simple_math/transformation/vector/vector_3d.h"
 #include <stdio.h>
+#include <math.h>
 
 fvector_3d::fvector_3d()
 	:x(0.f)
 	,y(0.f)
 	,z(0.f)
+{
+}
+
+fvector_3d::fvector_3d(float in_value)
+	:x(in_value)
+	,y(in_value)
+	,z(in_value)
 {
 }
 
@@ -32,7 +40,22 @@ char* fvector_3d::to_string(char* buff)
 	return buff;
 }
 
-float fvector_3d::dot(const fvector_3d& a)
+float fvector_3d::dot(const fvector_3d& a, const fvector_3d& b)
 {
-	return a.x * x + a.y * y + z * a.z;
+	return a.x * b.x + a.y * b.y + b.z * a.z;
+}
+
+void fvector_3d::normalize()
+{
+	float value = sqrtf(x * x + y * y + z * z);
+
+	*this /= value;
+}
+
+fvector_3d fvector_3d::cross_product(const fvector_3d& a, const fvector_3d& b)
+{
+	return fvector_3d(
+		a.y * b.z - a.z * b.y,
+		a.z * b.x - a.x * b.z,
+		a.x * b.y - a.y * b.x);
 }

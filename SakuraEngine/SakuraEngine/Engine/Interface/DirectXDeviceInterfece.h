@@ -6,8 +6,11 @@
 class CWindowsEngine;
  #else
 class CEngine;
- #endif
+#endif
 
+class CLightManage;
+class CMeshManage;
+class CWorld;
 
 
 
@@ -17,6 +20,9 @@ class IDirectXDeviceInterfece
 public:
 	ComPtr<ID3D12Fence> GetFence();//获取围栏 围栏接口
 	ComPtr<ID3D12Device> GetD3dDevice();//获取D3D驱动 驱动接口
+	CLightManage* GetLightManage();//获取灯光数据信息接口
+	CMeshManage* GetMeshManage();//获取模型数据信息接口
+	CWorld* GetWorld();//获得世界信息接口
 
 	//获取当前队列
 	ComPtr<ID3D12GraphicsCommandList> GetGraphicsCommandList();//拿到在WindowsEngine.h里用于同步CPU和一个或多个GPU的对象
@@ -42,6 +48,9 @@ struct IDirectXDeviceInterfece_Struct
 public:
 	ComPtr<ID3D12Fence> GetFence();//获取围栏 围栏接口
 	ComPtr<ID3D12Device> GetD3dDevice();//获取D3D驱动 驱动接口
+	CLightManage* GetLightManage();//获取灯光数据信息接口
+	CMeshManage* GetMeshManage();//获取模型数据信息接口
+	CWorld* GetWorld();//获得世界信息接口
 
 	//获取当前队列
 	ComPtr<ID3D12GraphicsCommandList> GetGraphicsCommandList();//拿到在WindowsEngine.h里用于同步CPU和一个或多个GPU的对象

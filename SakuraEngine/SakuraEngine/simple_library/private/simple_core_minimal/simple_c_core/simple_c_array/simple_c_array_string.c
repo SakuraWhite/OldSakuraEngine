@@ -83,3 +83,51 @@ bool is_exist(char const * in_data, simple_c_string *array_c)
 
 	return false;
 }
+
+void dismantling_wstring(const wchar_t* in_data, const wchar_t* str_sub, simple_c_wstring* array_c)
+{
+	wchar_t buf[8196 * 10] = { 0 };
+	wcscpy(buf, in_data);
+
+	init_wstring(array_c);
+
+	wchar_t* p = wcstok(buf, str_sub,NULL);
+	add_wstring(p, array_c);
+
+	while (p)
+	{
+		if ((p = wcstok(NULL, str_sub, NULL)) != NULL)
+		{
+			add_wstring(p, array_c);
+		}
+	}
+}
+
+void init_wstring(simple_c_wstring* array_c)
+{
+	array_c->size = 0;
+	array_c->data = 0;
+}
+
+void destroy_wstring(simple_c_wstring* array_c)
+{
+	assert(array_c);
+
+	free(array_c->data);
+}
+
+void add_wstring(wchar_t const* in_data, simple_c_wstring* array_c)
+{
+	assert(array_c);
+
+	int index = array_c->size;
+	array_c->size++;
+	array_c->data = realloc(array_c->data, array_c->size * sizeof(wstr_node));
+
+	wcscpy(array_c->data[index].data, in_data);
+}
+
+wchar_t* get_wstring(int in_index, simple_c_wstring* array_c)
+{
+	return array_c->data[in_index].data;
+}

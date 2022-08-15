@@ -5,14 +5,29 @@ FRenderingPipeline::FRenderingPipeline()
 
 }
 
-void FRenderingPipeline::BuildMesh(GMesh* InMesh, const FMeshRenderingData& MeshData)
+void FRenderingPipeline::BuildMesh(const size_t InMeshHash, CMeshComponent* InMesh, const FMeshRenderingData& MeshData)
 {
-	GeometryMap.BuildMesh(InMesh, MeshData);
+	GeometryMap.BuildMesh(InMeshHash, InMesh, MeshData);
+}
+
+void FRenderingPipeline::DuplicateMesh(CMeshComponent* InMesh, const FRenderingData& MeshData)
+{
+	//复制模型
+	GeometryMap.DuplicateMesh(InMesh, MeshData);
+}
+
+bool FRenderingPipeline::FindMeshRenderingDataByHash(const size_t& InHash, FRenderingData& MeshData, int InRenderLayerIndex)
+{
+	//返回通过哈希寻找的模型渲染数据
+	return GeometryMap.FindMeshRenderingDataByHash(InHash, MeshData, InRenderLayerIndex);
 }
 
 void FRenderingPipeline::UpdateCalculations(float DeltaTime, const FViewportInfo& ViewportInfo)
 {
+	//更新几何map里 计算常量缓冲区
 	GeometryMap.UpdateCalculations(DeltaTime, ViewportInfo);
+	//渲染层级调用 计算常量缓冲区
+	RenderLayer.UpdateCalculations(DeltaTime, ViewportInfo);
 }
 
 void FRenderingPipeline::BuildPipeline()
@@ -21,28 +36,21 @@ void FRenderingPipeline::BuildPipeline()
 	//初始化GPS描述
 	DirectXPipelineState.ResetGPSDesc();//重置 图形_管线_状态_描述
 
-	//构建根签名
-	RootSignature.BuildRootSignature();//构建根签名
+	//注册渲染层级		几何				DX管线状态
+	RenderLayer.Init(&GeometryMap, &DirectXPipelineState);
+
+	//统一对渲染层级进行排序
+	RenderLayer.Sort();
+
+	//纹理资源读取 需要先读取贴图 再构建根签名
+	GeometryMap.LoadTexture();
+
+	//构建根签名						构建根签名时我们可以通过几何模型来获取纹理贴图资源数量
+	RootSignature.BuildRootSignature(GeometryMap.GetDrawTextureResourcesNumber());//构建根签名
 	DirectXPipelineState.BindRootSignature(RootSignature.GetRootSignature());//将根签名绑定在渲染管线状态上
 
-	//构建Shader HLSL
-	VertexShader.BuildShaders(//构建顶点着色器
-		L"../SakuraEngine/Shader/HelloHLSL.hlsl",//寻找外部的hlsl着色器语言文件
-		"VertexShaderMain",//入口函数名
-		"vs_5_0");//使用的版本
-	PixelShader.BuildShaders(			//构建像素着色器
-		L"../SakuraEngine/Shader/HelloHLSL.hlsl",//寻找外部的hlsl着色器语言文件
-		"PixelShaderMain", //入口函数名
-		"ps_5_0");//构建像素着色器
-	DirectXPipelineState.BindShader(VertexShader, PixelShader);//将Shader绑定在渲染管线状态上
-
-	//输入布局 构建层 位置颜色法线等等信息
-	InputElementDesc =
-	{
-		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},//指定位置 元素语义  指定格式  插入槽  内存中的偏移  当前的位置
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}//指定颜色 元素语义  指定格式  插入槽  内存中的偏移  当前的位置
-	};
-	DirectXPipelineState.BindInputLayout(InputElementDesc.data(), InputElementDesc.size());////将输入布局绑定在渲染管线状态上
+	//渲染每个层级的Shader
+	RenderLayer.BuildShader();
 
 	//构建模型
 	GeometryMap.Build();
@@ -50,23 +58,38 @@ void FRenderingPipeline::BuildPipeline()
 	//构建CBV常量描述堆 常量缓冲区视图(constant buffer view)
 	GeometryMap.BuildDescriptorHeap();
 
-	//构建对象常量缓冲区
-	GeometryMap.BuildConstantBuffer();
+	//构建模型常量缓冲区
+	GeometryMap.BuildMeshConstantBuffer();
 
+	//构建材质常量缓冲区
+	GeometryMap.BuildMaterialShaderResourceView();
+
+	//构建灯光常量缓冲区
+	GeometryMap.BuildLightConstantBuffer();
+
+	
 	//构建视口常量缓冲区视图
 	GeometryMap.BuildViewportConstantBufferView();
 
-	//构建管线
-	DirectXPipelineState.Build();
+	//构建贴图常量缓冲区
+	GeometryMap.BuildTextureConstantBuffer();
+
+	//构建管线状态参数  PSO参数 
+	DirectXPipelineState.BuildParam();
+
+	//通过渲染层级来构建管线状态 PSO
+	RenderLayer.BuildPSO();
 
 }
+
 
 void FRenderingPipeline::PreDraw(float DeltaTime)
 {
 	//预初始化  （初始化PSO）
 	DirectXPipelineState.PreDraw(DeltaTime);
 	
-
+	//渲染层级调用预渲染
+	RenderLayer.PreDraw(DeltaTime);
 }
 
 void FRenderingPipeline::Draw(float DeltaTime)
@@ -75,11 +98,22 @@ void FRenderingPipeline::Draw(float DeltaTime)
 	GeometryMap.PreDraw(DeltaTime);
 	//设置根签名
 	RootSignature.PreDraw(DeltaTime);
+
 	//渲染
 	GeometryMap.Draw(DeltaTime);
+	//渲染层级调用渲染(进行时)
+	RenderLayer.Draw(DeltaTime);
+
+	//渲染管线状态
+	DirectXPipelineState.Draw(DeltaTime);
 }
 
 void FRenderingPipeline::PostDraw(float DeltaTime)
 {
 	GeometryMap.PostDraw(DeltaTime);
+
+	//渲染层级调用渲染(结束)
+	RenderLayer.PostDraw(DeltaTime);
+	//渲染管线状态  
+	DirectXPipelineState.PostDraw(DeltaTime);
 }

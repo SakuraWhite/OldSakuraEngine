@@ -6,9 +6,10 @@
 #include "../../simple_cpp_core_minimal/simple_cpp_core_minimal.h"
 #include "simple_channel.h"
 #include "../../../public/simple_cpp_core_minimal/simple_cpp_core_minimal.h"
+#include "../../simple_library_macro.h"
 
 //class FSimpleChannel;
-class FSimpleConnetion
+class SIMPLE_LIBRARY_API FSimpleConnetion
 {
 public:
 	FSimpleConnetion();

@@ -13,7 +13,8 @@ public:
 	void BuildShaders(				 //接口 通过接口区去编译Shader代码
 		const wstring& InFinleName,	 //当前Shader代码在磁盘的那个位置
 		const string& InEntryFunName,//Shader函数的进入点， 相当于函数的Mian语言
-		const string& InShadersVersion);//Shader的版本
+		const string& InShadersVersion,//Shader的版本
+		const D3D_SHADER_MACRO* InShaderMacro = NULL);//容器  宏
 private:
 	ComPtr<ID3DBlob> ShaderCode; //Shader代码区
 };

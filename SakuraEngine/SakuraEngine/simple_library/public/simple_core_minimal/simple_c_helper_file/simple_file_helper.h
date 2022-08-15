@@ -27,21 +27,45 @@ _CRT_BEGIN_C_HEADER
 typedef struct
 {
 	int index;
-	char paths[8196][1024];//MAX_PATH
+	char paths[2048][512];//MAX_PATH
 }def_c_paths;
 
+typedef struct
+{
+	int index;
+	wchar_t paths[2048][512];//MAX_PATH
+}def_c_paths_w;
+
 void init_def_c_paths(def_c_paths *c_paths);
+void init_def_c_paths_w(def_c_paths_w* c_paths);
 
 int copy_file(char *Src, char *Dest);
 
 void find_files(char const *in_path, def_c_paths *str,bool b_recursion);
 
+bool is_file_exists(char const* filename);
+
 bool create_file(char const *filename);
  
+//创建路径
 bool create_file_directory(char const *in_path);
+
+//打开地址
+bool open_url(const char* url);
+
+//通过参数打开url
+bool open_url_by_param(const char* url, const char* param);
+
+//通过操作打开某个东西
+bool open_by_operation(const char* in_operation, const char* url, const char* param);
+
+//打开一个文件夹
+bool open_explore(const char* url);
 
 //使用该接口 一定要初始化buf
 bool get_file_buf(const char *path,char *buf);
+
+bool save_file_buff(const char* path, char* buf);
 
 bool add_file_buf(const char *path, char *buf);
 
@@ -83,6 +107,18 @@ bool save_data_to_disk_w(const wchar_t* path, char* buf,int buf_size);
 
 //这个是以二进制方式读取 buf的大小要比实际大小+1 因为最后一位留给/0
 bool load_data_from_disk_w(const wchar_t* path, char* buf);
+
+bool is_file_exists_w(const wchar_t *filename);
+
+//打开地址
+bool open_url_w(const wchar_t* url);
+
+bool open_url_by_param_w(const wchar_t* url,const wchar_t *param);
+
+bool open_by_operation_w(const wchar_t *in_operation, const wchar_t* url, const wchar_t* param);
+
+//打开一个文件夹
+bool open_explore_w(const wchar_t* url);
 
 unsigned int get_file_size_by_filename_w(const wchar_t* filename);
 _CRT_END_C_HEADER
