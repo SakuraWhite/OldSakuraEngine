@@ -8,6 +8,9 @@ FMaterialConstantBuffer::FMaterialConstantBuffer()
 	, BaseColorIndex(-1)//颜色材质贴图序号初始化 -1代表什么也没有
 	, NormalIndex(-1) //初始化法线索引
 	, SpecularIndex(-1)//初始化高光索引
+	, FresnelF0(0.04f, 0.04f, 0.04f)//初始化菲涅尔因子
+	, Transparency(1.f)//初始化透明
 	, TransformInformation(EngineMath::IdentityMatrix4x4())   //单位化材质变换信息
+	, Refraction(1.1f)//初始化折射度
 {
 }

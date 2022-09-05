@@ -3,22 +3,27 @@
 #include "../../../../Debug/EngineDebug.h"
 #include "../../../../Config/EngineRenderConfig.h"
 #include "../../../../Rendering/Core/Rendering.h"
+
 #include "../../../../Mesh/BoxMesh.h"
 #include "../../../../Mesh/SphereMesh.h"
 #include "../../../../Mesh/CylinderMesh.h"
 #include "../../../../Mesh/ConeMesh.h"
 #include "../../../../Mesh/PlaneMesh.h"
 #include "../../../../Mesh/CustomMesh.h"
+
 #include "../../../../Core/CoreObject/CoreMinimalObject.h"
 #include "../../../../Core/World.h"
 #include "../../../../Component/Mesh/Core/MeshComponent.h"
 #include "../../../../Mesh/Core/MeshManage.h"
 #include "../../../../Mesh/Core/Material/Material.h"
 #include "../../../../Manage/LightManage.h"
+
 #include "../../../../Actor/Light/ParallelLight.h"
 #include "../../../../Actor/Light/SpotLight.h"
 #include "../../../../Actor/Light/PointLight.h"
 
+#include "../../../../Actor/Sky/Fog.h"
+#include "../../../../Actor/Sky/Sky.h"
 
 #if defined(_WIN32)
 #include "../../../../Core/WinMainCommandParameters.h"
@@ -226,12 +231,17 @@ int CDirectXRenderingEngine::PostInit()
 		//布林冯 BinnPhong
 		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
 		{
+			//设置渲染层 分层												不透明反射层
+			SphereMesh->SetMeshRenderLayerType(EMeshRenderLayerType::RENDERLAYER_OPAQUE_REFLECTOR);
+
 			SphereMesh->CreateMesh(2.f, 50, 50);
 			//对模型位置进行设置
 			SphereMesh->SetPosition(XMFLOAT3(9.f, 7.f, 0.f));
 			//对模型材质进行设置
 			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
 			{
+				
+
 				InMaterial->SetBaseColor(fvector_4d(
 					220.f / 255.f,
 					223.f / 255.f,
@@ -239,6 +249,9 @@ int CDirectXRenderingEngine::PostInit()
 				InMaterial->SetMaterialType(EMaterialType::BinnPhong);//设置模型套用的材质类型
 				InMaterial->SetSpecular(fvector_3d(1.f));
 				InMaterial->SetRoughness(0.3f);
+
+				InMaterial->SetFresnelF0(fvector_3d(0.1f));
+				InMaterial->SetDynamicReflection(true);
 			}
 		}
 
@@ -342,12 +355,14 @@ int CDirectXRenderingEngine::PostInit()
 		//BackLight 玉的投射效果  次表面散射
 		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
 		{
+
 			SphereMesh->CreateMesh(2.f, 50, 50);
 			//对模型位置进行设置
 			SphereMesh->SetPosition(XMFLOAT3(9.f, 12.f, 0.f));
 			//对模型材质进行设置
 			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
 			{
+
 				InMaterial->SetBaseColor(fvector_4d(
 					2.f / 255.f,
 					214.f / 255.f,
@@ -459,6 +474,8 @@ int CDirectXRenderingEngine::PostInit()
 		//只显示纹理贴图 方法1(直接指定材质ID)
 		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
 		{
+			//设置渲染层级												设置为不透明反射层
+			SphereMesh->SetMeshRenderLayerType(EMeshRenderLayerType::RENDERLAYER_OPAQUE_REFLECTOR);
 			//					半径   XY轴细分
 			SphereMesh->CreateMesh(2.f, 50, 50);
 			//对模型位置进行设置
@@ -468,10 +485,16 @@ int CDirectXRenderingEngine::PostInit()
 			//对模型材质进行设置
 			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
 			{
+				InMaterial->SetDynamicReflection(true);//开启动态反射
+
 				InMaterial->SetBaseColor("Earth");//设置基本颜色贴图
 				InMaterial->SetSpecular(fvector_3d(1.f, 1.f, 1.f));//设置高光颜色
 				InMaterial->SetBaseColor(fvector_4d(1.f, 1.f, 1.f, 1.f));//设置模型基本颜色
 				InMaterial->SetMaterialType(EMaterialType::BinnPhong);
+
+
+				InMaterial->SetFresnelF0(fvector_3d(0.5f));//菲涅尔因子
+				InMaterial->SetRoughness(0.1f);//粗糙度
 			}
 		}
 
@@ -531,6 +554,7 @@ int CDirectXRenderingEngine::PostInit()
 				InMaterial->SetBaseColor(fvector_4d(1.f, 1.f, 1.f, 1.f));//设置模型基本颜色
 				InMaterial->SetMaterialType(EMaterialType::BinnPhong);
 
+
 			}
 		}
 
@@ -554,26 +578,69 @@ int CDirectXRenderingEngine::PostInit()
 			}
 		}
 
-
-		//环境光贴图
+		//镜面反射
 		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())
 		{
-			//									 法线反转是否开启
-			SphereMesh->CreateMesh(2.f, 100, 100, true);
-			//设置位置
-			SphereMesh->SetPosition(XMFLOAT3(0.f, 0.f, 0.f));
-			//SphereMesh->SetRotation(fvector_3d(0.f, 90.f, 0.f));
-			//设置缩放
-			SphereMesh->SetScale(fvector_3d(4000.f));
+			//设置渲染层 分层												不透明反射层
+			SphereMesh->SetMeshRenderLayerType(EMeshRenderLayerType::RENDERLAYER_OPAQUE_REFLECTOR);
+			//					半径   XY轴细分
+			SphereMesh->CreateMesh(2.f, 100, 100);
+			//对模型位置进行设置
+			SphereMesh->SetPosition(XMFLOAT3(15.f, 13.f, 0.f));
+			//旋转
+			SphereMesh->SetRotation(fvector_3d(0.f, 0.f, 0.f));
 			//对模型材质进行设置
 			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
 			{
-				InMaterial->SetBaseColor("EpicQuadPanorama_CC");//设置颜色贴图
-				InMaterial->SetSpecular(fvector_3d(1.f));//设置高光
-				InMaterial->SetMaterialType(EMaterialType::BaseColor);
+				InMaterial->SetDynamicReflection(true);//开启动态反射
+				InMaterial->SetBaseColor(fvector_4d(0.6f, 0.6f, 0.6f, 1.f));//设置颜色贴图
+				InMaterial->SetMaterialType(EMaterialType::Phong);
+
+				InMaterial->SetFresnelF0(fvector_3d(0.8f));//菲涅尔因子
+				InMaterial->SetRoughness(0.01f);//粗糙度
 			}
 		}
 
+		//玻璃珠子
+		if (GSphereMesh* SphereMesh = World->CreateActorObject<GSphereMesh>())//透明的珠子
+		{
+			//设置渲染层 分层												不透明反射层
+			SphereMesh->SetMeshRenderLayerType(EMeshRenderLayerType::RENDERLAYER_OPAQUE_REFLECTOR);
+			SphereMesh->CreateMesh(2.f, 100, 100);
+			SphereMesh->SetPosition(XMFLOAT3(0.f, 9.f, 10.f));
+			SphereMesh->SetRotation(fvector_3d(0.f, 0.f, 0.f));
+			if (CMaterial* InMaterial = (*SphereMesh->GetMaterials())[0])
+			{
+				InMaterial->SetBaseColor(fvector_4d(0.f));//设置颜色
+				InMaterial->SetMaterialType(EMaterialType::Transparency);//设置材质
+
+				InMaterial->SetRoughness(0.01f);//粗糙度
+				InMaterial->SetFresnelF0(fvector_3d(0.5f));//设置菲涅尔因子
+				InMaterial->SetTransparency(1.f); //设置透明度
+				InMaterial->SetDynamicReflection(true);//开启动态反射
+
+				InMaterial->SetSpecular(fvector_3d(1.f));
+				InMaterial->SetRefractiveValue(1.11f);//设置折射度
+			}
+		}
+
+		//环境光贴图
+		if (GSky* InSky = World->CreateActorObject<GSky>())
+		{
+			InSky->SetPosition(XMFLOAT3(0.f, 0.f, 0.f));
+		}
+
+
+		//雾的实例 生成
+		if (GFog* Fog = World->CreateActorObject<GFog>())
+		{
+			Fog->SetFogColor(fvector_color(0.7f));//雾颜色
+			Fog->SetFogStart(10.f);//雾起始点
+			Fog->SetFogRange(200.f);//雾半径范围
+
+			Fog->SetFogHeight(5000.f);//雾高度
+			Fog->SetFogTransparentCoefficient(0.09f);//雾透明系数
+		}
 	}
 
 
@@ -601,54 +668,18 @@ void CDirectXRenderingEngine::Tick(float DeltaTime)
 	//重置录制相关的内存，为下一帧做准备 
 	ANALYSIS_HRESULT(CommandAllocator->Reset());
 
+	
 	//Mesh的预初始化
 	MeshManage->PreDraw(DeltaTime);
 
-	//指向哪个资源 转换其状态
-	//D3D12_RESOURCE_STATE_RENDER_TARGET：我们要渲染的目标里面写入的状态
-	CD3DX12_RESOURCE_BARRIER ResourceBarrierPresent = CD3DX12_RESOURCE_BARRIER::Transition(GetCurrentSwapBuff(),
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	//开始设置主视口渲染目标
+	StartSetMainViewportRenderTarget();
 
-	GraphicsCommandList->ResourceBarrier(1, &ResourceBarrierPresent);
-
-	//需要每帧执行
-	//绑定矩形框
-	GraphicsCommandList->RSSetViewports(1, &ViewprotInfo);//1代表着绑定的数量，之后是绑定视口信息
-	GraphicsCommandList->RSSetScissorRects(1, &ViewprotRect);//1代表绑定数量，之后是绑定视口矩形大小
-
-	//清除画布
-	GraphicsCommandList->ClearRenderTargetView(//我们可以使用ClearRenderTargetView来吧画布清楚为各种颜色，比如红色白色蓝色等等
-		GetCurrentSwapBufferView(),//我们需要获取的视图
-		DirectX::Colors::Black,		//把画布给清除为各种颜色的API
-		0, nullptr);//0与nullptr是与视口相关
-
-	//清除深度模板缓冲区
-	//将当前的一个或多个的渲染目标与深度模板缓冲区绑定在输出的合并阶段
-	GraphicsCommandList->ClearDepthStencilView(
-		GetCurrentDepthStencilView(), //快速获取深度位置
-		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,//清除深度与模板 位运算
-		1.f,//代表着我们用1来清除深度缓冲区
-		0, //代表着我们用0来清除模板缓冲区
-		0, NULL);//最后两个参数保持与DX12的API一致即可
-
-	//指定渲染缓冲区 输出合并阶段
-	D3D12_CPU_DESCRIPTOR_HANDLE SwapBufferView = GetCurrentSwapBufferView();//指定渲染目标
-	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView = GetCurrentDepthStencilView();//指定深度目标
-	GraphicsCommandList->OMSetRenderTargets(
-		1,//指定绑定的数量
-		&SwapBufferView, //指定渲染目标
-		true,//代表传入的句柄指向一个连续的描述符指针
-		&DepthStencilView);//指定深度目标
-
-	
 	MeshManage->Draw(DeltaTime);//渲染的结构框架
 	MeshManage->PostDraw(DeltaTime);//渲染提交
 
-	//设置新的状态准备渲染
-	CD3DX12_RESOURCE_BARRIER ResourceBarrierPresentRenderTarget = CD3DX12_RESOURCE_BARRIER::Transition(GetCurrentSwapBuff(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, 
-		D3D12_RESOURCE_STATE_PRESENT);
-	GraphicsCommandList->ResourceBarrier(1, &ResourceBarrierPresentRenderTarget);
+	//结束设置主视口渲染目标
+	EndSetMainViewportRenderTarget();
 
 	//录入完成
 	ANALYSIS_HRESULT(GraphicsCommandList->Close());
@@ -686,6 +717,62 @@ int CDirectXRenderingEngine::PostExit()
 
 	Engine_Log("Engine post exit complete.");
 	return 0;
+}
+
+void CDirectXRenderingEngine::StartSetMainViewportRenderTarget()
+{
+
+	//指向哪个资源 转换其状态
+	//D3D12_RESOURCE_STATE_RENDER_TARGET：我们要渲染的目标里面写入的状态
+	CD3DX12_RESOURCE_BARRIER ResourceBarrierPresent = CD3DX12_RESOURCE_BARRIER::Transition(GetCurrentSwapBuff(),
+		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	GraphicsCommandList->ResourceBarrier(1, &ResourceBarrierPresent);
+
+	//需要每帧执行
+	//绑定矩形框
+	GraphicsCommandList->RSSetViewports(1, &ViewprotInfo);//1代表着绑定的数量，之后是绑定视口信息
+	GraphicsCommandList->RSSetScissorRects(1, &ViewprotRect);//1代表绑定数量，之后是绑定视口矩形大小
+
+	
+	//指定渲染缓冲区 输出合并阶段
+	D3D12_CPU_DESCRIPTOR_HANDLE SwapBufferView = GetCurrentSwapBufferView();//指定渲染目标
+	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView = GetCurrentDepthStencilView();//指定深度目标
+	GraphicsCommandList->OMSetRenderTargets(
+		1,//指定绑定的数量
+		&SwapBufferView, //指定渲染目标
+		true,//代表传入的句柄指向一个连续的描述符指针
+		&DepthStencilView);//指定深度目标
+
+}
+
+void CDirectXRenderingEngine::EndSetMainViewportRenderTarget()
+{
+	//设置新的状态准备渲染
+	CD3DX12_RESOURCE_BARRIER ResourceBarrierPresentRenderTarget = CD3DX12_RESOURCE_BARRIER::Transition(GetCurrentSwapBuff(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT);
+	GraphicsCommandList->ResourceBarrier(1, &ResourceBarrierPresentRenderTarget);
+}
+
+void CDirectXRenderingEngine::ClearMainSwapChainCanvas()
+{
+
+	//清除画布
+	GraphicsCommandList->ClearRenderTargetView(//我们可以使用ClearRenderTargetView来吧画布清楚为各种颜色，比如红色白色蓝色等等
+		GetCurrentSwapBufferView(),//我们需要获取的视图
+		DirectX::Colors::Black,		//把画布给清除为各种颜色的API
+		0, nullptr);//0与nullptr是与视口相关
+
+	//清除深度模板缓冲区
+	//将当前的一个或多个的渲染目标与深度模板缓冲区绑定在输出的合并阶段
+	GraphicsCommandList->ClearDepthStencilView(
+		GetCurrentDepthStencilView(), //快速获取深度位置
+		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,//清除深度与模板 位运算
+		1.f,//代表着我们用1来清除深度缓冲区
+		0, //代表着我们用0来清除模板缓冲区
+		0, NULL);//最后两个参数保持与DX12的API一致即可
+
 }
 
 ID3D12Resource* CDirectXRenderingEngine::GetCurrentSwapBuff() const //获取BUFF交换链  BUFF交换链属于渲染器的内容
@@ -901,7 +988,9 @@ bool CDirectXRenderingEngine::InitDirect3D()
 
 	//RTV
 	D3D12_DESCRIPTOR_HEAP_DESC RTVDescriptorHeapDesc;
-	RTVDescriptorHeapDesc.NumDescriptors = FEngineRenderConfig::GetRenderConfig()->SwapChainCount;
+	RTVDescriptorHeapDesc.NumDescriptors = 
+		FEngineRenderConfig::GetRenderConfig()->SwapChainCount //原本交换链的描述符
+		+6;//这里加上cubemap的描述符  RTV 渲染目标视图
 	RTVDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	RTVDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	RTVDescriptorHeapDesc.NodeMask = 0;
@@ -909,9 +998,11 @@ bool CDirectXRenderingEngine::InitDirect3D()
 		&RTVDescriptorHeapDesc,
 		IID_PPV_ARGS(RTVHeap.GetAddressOf())));
 
-	//DSV
+	//DSV 深度模板视图
 	D3D12_DESCRIPTOR_HEAP_DESC DSVDescriptorHeapDesc;
-	DSVDescriptorHeapDesc.NumDescriptors = 1;
+	DSVDescriptorHeapDesc.NumDescriptors = 
+		1	//原本创建的深度
+		+ 1; //这里是原本深度加上动态cubemap的深度 DSV 深度模板视图
 	DSVDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	DSVDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	DSVDescriptorHeapDesc.NodeMask = 0;

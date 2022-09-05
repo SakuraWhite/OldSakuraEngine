@@ -6,7 +6,7 @@
 
 
 GCamera::GCamera()
-	:GActorObject()
+	: Super()//定义反射
 {
 	InputComponent = CreateObject<CInputComponent>(new CInputComponent());
 	//配置灵敏度
@@ -36,8 +36,8 @@ void GCamera::BeginInit()
 
 void GCamera::Tick(float DeltaTime)
 {
-	//执行构建屏幕空间
-	BuildVewMatrix(DeltaTime);
+
+	Super::Tick(DeltaTime);//反射ClientViewport.h中的帧执行
 
 }
 
@@ -47,30 +47,42 @@ void GCamera::ExecuteKeyboard(const FInputKey& InputKey)
 	{
 		MoveForward(1.f);//如果判定摁键为W 那么传入前后移动为 正1  为前进
 
+		//脏标记
+		SetDirty(true);
 	}
 	else if (InputKey.KeyName == "S")
 	{
 		MoveForward(-1.f);//如果判定摁键为S 那么传入前后移动为 负1  为后退
+		//脏标记
+		SetDirty(true);
 	}
 	else if (InputKey.KeyName == "A")
 	{
 		MoveRight(-1.f);//如果判定摁键为A 那么传入左右移动为 正1  为向右移动
+		//脏标记
+		SetDirty(true);
 	}
 	else if (InputKey.KeyName == "D")
 	{
 		MoveRight(1.f);//如果判定摁键为A 那么传入左右移动为 负1  为向左移动
+		//脏标记
+		SetDirty(true);
 	}
 	else if (InputKey.KeyName == "Q")
 	{
 		CmeraType = ECmeraType::ObservationObject;//如果我们摁下Q 那么摄像机就会被设定为物体对象观察模式
+		//脏标记
+		SetDirty(true);
 	}
 	else if (InputKey.KeyName == "E")
 	{
 		CmeraType = ECmeraType::CameraRoaming;//如果我们摁下E 那么摄像机就会被设定为相机漫游模式
+		//脏标记
+		SetDirty(true);
 	}
 }
 
-void GCamera::BuildVewMatrix(float DeltaTime)
+void GCamera::BuildViewMatrix(float DeltaTime)
 {
 	//更新矩阵
 	//相机模式的开关 选择世界漫游矩阵还是物体观察模式矩阵
@@ -78,26 +90,8 @@ void GCamera::BuildVewMatrix(float DeltaTime)
 	{
 		case CameraRoaming: //世界漫游矩阵
 		{
-
-			//计算世界空间转换到屏幕空间运算
-			GetTransformationComponent()->CorrectionVector();
-			//计算按自身方向移动意图
-			fvector_3d V3;	// fvector_3d是封装好的数学库里的计算
-			//获得从世界空间转换到屏幕空间后的矫正位置
-			GetTransformationComponent()->GetCorrectionPosition(V3);
-
-			//构建屏幕空间VewMatrix
-			XMFLOAT3 RightVector = GetTransformationComponent()->GetRightVector();//提取右朝向方向
-			XMFLOAT3 UPVector = GetTransformationComponent()->GetUPVector();//提取上朝向方向
-			XMFLOAT3 ForwardVector = GetTransformationComponent()->GetForwardVector();//提取正朝向方向
-
-			//这里矩阵是列式  屏幕空间矩阵
-			ViewMatrix = {
-				RightVector.x,	UPVector.x,	ForwardVector.x,	0.f,
-				RightVector.y,	UPVector.y,	ForwardVector.y,	0.f,
-				RightVector.z,	UPVector.z,	ForwardVector.z,	0.f,
-				V3.x,			V3.y,		V3.z,				1.f };
-
+			Super::BuildViewMatrix(DeltaTime);//反射ClientViewport.h中的构建视口矩阵
+		
 			break;
 		}	
 		case ObservationObject: //物体对象观察模式
@@ -138,6 +132,9 @@ void GCamera::OnMouseButtonDown(int X, int Y)
 
 	SetCapture(GetMianWindowsHandle());//摁键捕获
 
+	//脏标记
+	SetDirty(true);
+
 }
 
 void GCamera::OnMouseButtonUp(int X, int Y)
@@ -150,6 +147,9 @@ void GCamera::OnMouseButtonUp(int X, int Y)
 
 	LastMousePosition.x = X;
 	LastMousePosition.y = Y;
+
+	//脏标记
+	SetDirty(true);
 
 }
 
@@ -186,6 +186,9 @@ void GCamera::OnMouseMove(int X, int Y)
 	LastMousePosition.x = X;
 	LastMousePosition.y = Y;
 
+	//脏标记
+	SetDirty(true);
+
 }
 
 void GCamera::OnMouseWheel(int X, int Y, float InDelta)
@@ -198,7 +201,8 @@ void GCamera::OnMouseWheel(int X, int Y, float InDelta)
 		Radius = math_libray::Clamp(Radius, 7.f, 40.f);
 	}
 
-
+	//脏标记
+	SetDirty(true);
 }
 
 void GCamera::MoveForward(float InValue)

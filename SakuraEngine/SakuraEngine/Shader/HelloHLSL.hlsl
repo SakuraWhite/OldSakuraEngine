@@ -1,4 +1,7 @@
 #include "Material.hlsl"
+#include "PBR.hlsl"
+#include "SkyFunction.hlsl"
+
 
 struct MeshVertexIn //Mash的顶点 顶点输入IN
 {
@@ -358,6 +361,14 @@ float4 PixelShaderMain(MeshVertexOut MVOut) : SV_TARGET //入口 在Mash.cpp中�
                 DotValue = NormalLight * (A + B * max(0, PhiRI) * sin(Alpha) * tan(Beta));
 
             }
+            
+            else if (MatConstBuffer.MaterialType == 15)//透明物体
+            {
+                ////计算漫反射
+                //float DiffuseReflection = dot(ModelNormal, NormalizeLightDirection);
+                //DotValue = max((DiffuseReflection * 0.5f + 0.5f), 0.0); //[-1,1] => [0,1]
+            }
+            
             else if (MatConstBuffer.MaterialType == 100) //序号100 菲涅尔  菲涅尔是效果 并不是材质
             {
 		        //在Material.hlsl中封装的菲涅尔算法
@@ -387,6 +398,58 @@ float4 PixelShaderMain(MeshVertexOut MVOut) : SV_TARGET //入口 在Mash.cpp中�
                  + Specular * Material.BaseColor)  //灯光强度再影响高光与颜色  高光
 				  + AmbientLight * Material.BaseColor; //环境光照乘以模型颜色 间接光(环境光)
 
-		return MVOut.Color;
+   
+    //使用开关 来进行判断那些材质有反射，比如冯 布林冯以及玉材质有
+    switch (MatConstBuffer.MaterialType)
+    {
+        case 2: //冯
+        case 3: //布林冯
+        case 9: //玉材质
+        {
+             //计算反射
+             float3 ReflectionColor = GetReflectionColor(MatConstBuffer, ModelNormal, MVOut.WorldPosition.xyz); //获取反射颜色 输入材质,模型法线,世界位置
+             MVOut.Color.xyz += ReflectionColor; //将原本模型颜色加上反射颜色
+             break;
+            
+        }
+        case 15: //折射小球
+        {
+            //先计算折射                 
+                float3 NewRefract = GetRefract(ModelNormal, MVOut.WorldPosition.xyz, MatConstBuffer.Refraction);
+                float3 SampleRefractColor = GetReflectionSampleColor(ModelNormal, NewRefract);//采样反射颜色（这里是折射颜色使用）
+
+			//计算反射
+                float3 NewReflect = GetReflect(ModelNormal, MVOut.WorldPosition.xyz);
+                float3 SampleReflectionColor = GetReflectionSampleColor(ModelNormal, NewReflect); //采样反射颜色
+			
+			//算A通道
+                float3 V = normalize(ViewportPosition.xyz - MVOut.WorldPosition.xyz); //拿视角位置减去世界位置得到从位置指向视角的方向
+                float Shininess = GetShininess(MatConstBuffer); //获取反射度 
+                float3 FresnelFactor = FresnelSchlickFactor(MatConstBuffer, ModelNormal, V);//计算菲涅尔因子
+
+            //计算最终颜色      线性插值   折射颜色           反射颜色            使用反射度以及菲涅尔因子做线性插值的A值来控制   
+                float3 Color = lerp(SampleRefractColor, SampleReflectionColor, pow(Shininess * FresnelFactor, 2));
+
+                MVOut.Color.xyz += Color;//输出颜色
+                break;
+            
+        }
+    }
+    
+    if (MatConstBuffer.MaterialType == 15)
+    {
+        //透明折射球
+        MVOut.Color.a = MatConstBuffer.Transparency;
+    }
+    else
+    {
+        //计算透明
+        MVOut.Color.a = Material.BaseColor.a;
+    }
+    
+    //雾效果的计算
+    MVOut.Color = GetFogValue(MVOut.Color, MVOut.WorldPosition);
+    
+	return MVOut.Color;
 	
 }

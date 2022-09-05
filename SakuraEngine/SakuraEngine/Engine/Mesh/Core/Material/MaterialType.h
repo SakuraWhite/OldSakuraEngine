@@ -12,7 +12,7 @@ enum EMaterialType //枚举材质类型
 	Banded,				 //基础卡通效果
 	GradualBanded,		 //具有渐变效果的卡通材质
 	FinalBanded,		 //自定义的卡通材质 融合了很多效果的卡通材质
-	BackLight,			 //投射  次表面散射材质
+	BackLight,			 //透射  次表面散射材质
 	AnisotropyKajiyaKay, //GDC 各向异性 2004年KajiyaKay 头发渲染模型
 	OrenNayar,			 //GDC 粗糙表面材质  如沙漠
 
@@ -20,6 +20,9 @@ enum EMaterialType //枚举材质类型
 	BaseColor,			 //基础颜色模型 只有颜色 不受光照
 	Normal,				 //显示法线
 	WorldNormal,		 //显示世界法线	WorldspaceNormal;
+
+	Transparency = 15,		//透明
+
 	Fresnel = 100,		 //菲涅尔  单独的效果  不能算是材质
 	Max,				 //最大
 

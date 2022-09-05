@@ -35,4 +35,8 @@ public:
 
 	//模型渲染层级类型
 	EMeshRenderLayerType MeshRenderLayerType;
+
+public:
+	//动态反射开关 (组件)
+	bool IsDynamicReflection() const;//判断是否是动态反射
 };

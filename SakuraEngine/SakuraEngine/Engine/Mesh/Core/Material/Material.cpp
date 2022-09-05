@@ -2,14 +2,16 @@
 #include "../../../Math/EngineMath.h"
 
 CMaterial::CMaterial()
-	:bDirty(true)   //初始化判断是否为动态更新 默认为true
+	: bDirty(true)   //初始化判断是否为动态更新 默认为true
 	, MaterialIndex(-1)//初始化材质索引 -1为无
-	,BaseColor(0.5f, 0.5f, 0.5f, 1.f) //初始化基本颜色
-	,SpecularColor(0.f, 0.f, 0.f)//初始化高光颜色
-	,Roughness(0.2f)  //初始化粗糙度
-	,MaterialType(EMaterialType::Lambert) //材质类型初始化为兰伯特
-	,MaterialDisplayStatus(EMaterialDisplayStatusType::TriangleDisplay) //材质显示初始化三角形显示
-	,MaterialTransform(EngineMath::IdentityMatrix4x4())//初始化材质变换矩阵
+	, BaseColor(0.5f, 0.5f, 0.5f, 1.f) //初始化基本颜色
+	, SpecularColor(0.f, 0.f, 0.f)//初始化高光颜色
+	, Roughness(0.2f)  //初始化粗糙度
+	, MaterialType(EMaterialType::Lambert) //材质类型初始化为兰伯特
+	, MaterialDisplayStatus(EMaterialDisplayStatusType::TriangleDisplay) //材质显示初始化三角形显示
+	, MaterialTransform(EngineMath::IdentityMatrix4x4())//初始化材质变换矩阵
+	, Transparency(1.f)//初始化透明度
+	, bDynamicReflection(false)//初始化动态反射开关
 {
 }
 
@@ -63,6 +65,22 @@ void CMaterial::SetSpecular(const fvector_3d& InVector)
 	SetDirty(true);
 }
 
+void CMaterial::SetFresnelF0(const fvector_3d& InF0Vector)
+{
+	//设置菲涅尔因子
+	FresnelF0 = InF0Vector;
+	//标记为脏
+	SetDirty(true);
+}
+
+void CMaterial::SetTransparency(float InTransparency)
+{
+	//输入透明度
+	Transparency = InTransparency;
+	//标记为脏
+	SetDirty(true);
+}
+
 void CMaterial::SetBaseColor(const std::string& InAssetFilename)
 {
 	//输入的颜色贴图路径
@@ -91,5 +109,21 @@ void CMaterial::SetMaterialIndex(int InNewIndex)
 	//更新新的材质索引
 	MaterialIndex = InNewIndex;
 	//设置判定动态材质新状态
+	SetDirty(true);
+}
+
+void CMaterial::SetDynamicReflection(bool InDynamicReflection)
+{
+	//更新是否开启动态反射
+	bDynamicReflection = InDynamicReflection;
+	//脏
+	SetDirty(true);
+}
+
+void CMaterial::SetRefractiveValue(float InRefractiveValue)
+{
+	//更新折射度
+	Refractive = InRefractiveValue;
+	//脏
 	SetDirty(true);
 }

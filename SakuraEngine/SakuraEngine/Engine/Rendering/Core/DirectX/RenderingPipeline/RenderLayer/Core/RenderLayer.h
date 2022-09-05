@@ -2,6 +2,7 @@
 #include "../../../../../../Interface/DirectXDeviceInterfece.h"
 #include "../../../../../../Shader/Core/Shader.h"
 #include "../../Geometry/RenderingData.h"
+#include "../../../../../../Shader/Core/ShaderType.h"
 
 struct FDirectXPipelineState;
 struct FGeometryMap;
@@ -25,11 +26,19 @@ public:
 	virtual void Draw(float DeltaTime);//绘制(进行时)
 	virtual void PostDraw(float DeltaTime);//绘制结束
 
-	//PSO管线状态(渲染层级) 虚拟接口
-	virtual void BuildPSO() {}
+	//渲染对象（数据）
+	virtual void DrawObject(float DeltaTime, const FRenderingData& InRenderingData);
+	//指定渲染对象
+	virtual void FindObjectDraw(float DeltaTime, const CMeshComponent* InKey);
+
+	//PSO管线状态(渲染层级) 
+	virtual void BuildPSO();
 
 	//注册渲染层
 	void RegisterRenderLayer();
+
+	//构建Shader宏
+	virtual void BuildShaderMacro(std::vector<ShaderType::FShaderMacro> &InMacro);
 
 	//更新计算 常量缓冲区
 	virtual void UpdateCalculations(float DeltaTime, const FViewportInfo& ViewportInfo);
@@ -39,7 +48,7 @@ public:
 	
 public:
 	// 构建Shader
-	virtual void BuildShader() = 0;
+	virtual void BuildShader() {};
 
 	//获取模型渲染层级类型
 	virtual int GetRenderLayerType() const = 0;

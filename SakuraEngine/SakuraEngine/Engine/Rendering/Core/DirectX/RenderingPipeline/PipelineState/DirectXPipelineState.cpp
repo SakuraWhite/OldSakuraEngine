@@ -66,7 +66,7 @@ void FDirectXPipelineState::BuildParam()
 
 	//配置光栅化状态
 	GPSDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	GPSDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;//以线框方式显示
+	GPSDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;//默认以实体模式显示
 
 	//0000..0000
 	GPSDesc.SampleMask = UINT_MAX;//混合状态下的示例蒙版 因为多重采样最多是可以采样32位样本的 这里UINT_MAX采样所有的样本
@@ -112,6 +112,12 @@ void FDirectXPipelineState::ResetPSO(int InPSOType)
 	GetGraphicsCommandList()->SetPipelineState(PSO[InPSOType].Get());
 }
 
+void FDirectXPipelineState::ResetPSO()
+{
+	//直接使用自己设置的管线状态
+	ResetPSO(PipelineState);
+}
+
 void FDirectXPipelineState::SetFillMode(bool bWireframe)
 {
 	//判断渲染状态是否为线框模式
@@ -122,6 +128,18 @@ void FDirectXPipelineState::SetRenderTarget(int Index, const D3D12_RENDER_TARGET
 {
 	//设置渲染目标
 	GPSDesc.BlendState.RenderTarget[Index] = InRenderTargetBlend;
+}
+
+void FDirectXPipelineState::SetRasterizerState(const CD3DX12_RASTERIZER_DESC& InRasterizerDesc)
+{
+	//设置光栅化状态
+	GPSDesc.RasterizerState = InRasterizerDesc;
+}
+
+void FDirectXPipelineState::SetDepthStencilState(const CD3DX12_DEPTH_STENCIL_DESC& InDepthStencilDesc)
+{
+	//设置深度模板测试状态
+	GPSDesc.DepthStencilState = InDepthStencilDesc;
 }
 
 void FDirectXPipelineState::CaptureKeyboardKeys()

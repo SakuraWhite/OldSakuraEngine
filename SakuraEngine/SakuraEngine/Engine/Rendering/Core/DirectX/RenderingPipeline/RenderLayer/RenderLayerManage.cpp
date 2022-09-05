@@ -2,6 +2,8 @@
 #include "RenderLayer/AlphaTestRenderLayer.h"
 #include "RenderLayer/OpaqueRenderLayer.h"
 #include "RenderLayer/TransparentRenderLayer.h"
+#include "RenderLayer/BackgroundRenderLayer.h"
+#include "RenderLayer/OpaqueReflectorRenderLayer.h"
 
 //声明静态函数
 std::vector<std::shared_ptr<FRenderLayer>> FRenderLayerManage::RenderLayers;
@@ -11,9 +13,11 @@ FRenderLayerManage::FRenderLayerManage()
 	RenderLayers.clear();//渲染层级管理创建成功就清除
 
 	//注册渲染层级
-	CreateRenderLayer<FAlphaTestRenderLayer>();//Alpha测试
+	CreateRenderLayer<FBackgroundRenderLayer>();//背景层级
+	//CreateRenderLayer<FAlphaTestRenderLayer>();//Alpha测试
 	CreateRenderLayer<FOpaqueRenderLayer>();//不透明层级
 	CreateRenderLayer<FTransparentRenderLayer>();//透明层级
+	CreateRenderLayer<FOpaqueReflectorRenderLayer>();//不透明反射层
 
 }
 
@@ -111,5 +115,30 @@ void FRenderLayerManage::PostDraw(float DeltaTime)
 	for (auto& Tmp : RenderLayers)
 	{
 		Tmp->Draw(DeltaTime);
+	}
+}
+
+void FRenderLayerManage::Draw(int InLayer, float DeltaTime)
+{
+	//遍历寻找层级
+	for (auto& Tmp : RenderLayers)
+	{
+		if (Tmp->GetRenderLayerType() == InLayer)//判断找到想要的层级
+		{
+			Tmp->Draw(DeltaTime);//进行渲染
+			break;
+		}
+	}
+}
+
+void FRenderLayerManage::FindObjectDraw(float DeltaTime, int InLayer, const CMeshComponent* InKey)
+{
+	for (auto& Tmp : RenderLayers) //遍历渲染层及
+	{
+		if (Tmp->GetRenderLayerType() == InLayer)//判断找到想要的层级
+		{
+			Tmp->FindObjectDraw(DeltaTime, InKey); //指定模型渲染
+			break;
+		}
 	}
 }

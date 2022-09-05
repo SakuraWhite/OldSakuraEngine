@@ -4,6 +4,24 @@
 
 
 
+void IDirectXDeviceInterfece::StartSetMainViewportRenderTarget()
+{
+	//通过Engine 调取渲染Engine再调出开始设置主视口渲染目标
+	GetEngine()->GetRenderingEngine()->StartSetMainViewportRenderTarget();
+}
+
+void IDirectXDeviceInterfece::EndSetMainViewportRenderTarget()
+{
+	//通过Engine 调取渲染Engine再调出结束设置主视口渲染目标
+	GetEngine()->GetRenderingEngine()->EndSetMainViewportRenderTarget();
+}
+
+void IDirectXDeviceInterfece::ClearMainSwapChainCanvas()
+{
+	//通过Engine 调取渲染Engine再调出清除主视口交换链画布
+	GetEngine()->GetRenderingEngine()->ClearMainSwapChainCanvas();
+}
+
 //面向类
 ComPtr<ID3D12Fence> IDirectXDeviceInterfece::GetFence()
 {
@@ -100,6 +118,49 @@ ComPtr<ID3D12CommandQueue> IDirectXDeviceInterfece::GetCommandQueue()
 	return NULL;
 }
 
+ID3D12DescriptorHeap* IDirectXDeviceInterfece::GetRTVHeap()
+{
+	if (CWindowsEngine* InEngine = GetEngine())
+	{
+		if (InEngine->GetRenderingEngine())//拿到RenderingEngine
+		{
+			return InEngine->GetRenderingEngine()->RTVHeap.Get();//如果拿到渲染引擎则直接使用渲染目标视口堆
+		}
+	}
+	return NULL;
+}
+
+ID3D12DescriptorHeap* IDirectXDeviceInterfece::GetDSVHeap()
+{
+	if (CWindowsEngine* InEngine = GetEngine())
+	{
+		if (InEngine->GetRenderingEngine())//拿到RenderingEngine
+		{
+			return InEngine->GetRenderingEngine()->DSVHeap.Get();//直接使用深度模板描述堆
+		}
+	}
+
+	return NULL;
+}
+
+UINT IDirectXDeviceInterfece::GetDescriptorHandleIncrementSizeByDSV()
+{
+	//深度模板视图的描述符句柄增量大小 DSV
+	return GetD3dDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+}
+
+UINT IDirectXDeviceInterfece::GetDescriptorHandleIncrementSizeByRTV()
+{
+	//渲染目标视图的描述符句柄增量大小 RTV
+	return GetD3dDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+}
+
+UINT IDirectXDeviceInterfece::GetDescriptorHandleIncrementSizeByCBV_SRV_UAV()
+{
+	//渲染CBV SRV UAV描述符句柄增量大小 
+	return GetD3dDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+}
+
 UINT64 IDirectXDeviceInterfece::GetCurrentFenceIndex()
 {
 	if (CWindowsEngine* InEngine = GetEngine())
@@ -180,6 +241,36 @@ ComPtr<ID3D12CommandAllocator> IDirectXDeviceInterfece_Struct::GetCommandAllocat
 ComPtr<ID3D12CommandQueue> IDirectXDeviceInterfece_Struct::GetCommandQueue()
 {
 	return Interfece.GetCommandQueue();
+}
+
+ID3D12DescriptorHeap* IDirectXDeviceInterfece_Struct::GetRTVHeap()
+{
+	//直接调用渲染目标视口堆
+	return Interfece.GetRTVHeap();
+}
+
+ID3D12DescriptorHeap* IDirectXDeviceInterfece_Struct::GetDSVHeap()
+{
+	//直接调用深度模板描述堆
+	return Interfece.GetDSVHeap();
+}
+
+UINT IDirectXDeviceInterfece_Struct::GetDescriptorHandleIncrementSizeByDSV()
+{
+	//直接调用 深度模板视图的描述符句柄增量大小 DSV 偏移
+	return Interfece.GetDescriptorHandleIncrementSizeByDSV();
+}
+
+UINT IDirectXDeviceInterfece_Struct::GetDescriptorHandleIncrementSizeByRTV()
+{
+	//直接调用 渲染目标视图的描述符句柄增量大小 RTV 偏移
+	return Interfece.GetDescriptorHandleIncrementSizeByRTV();
+}
+
+UINT IDirectXDeviceInterfece_Struct::GetDescriptorHandleIncrementSizeByCBV_SRV_UAV()
+{
+	//直接调用  渲染CBV SRV UAV描述符句柄增量大小  偏移
+	return Interfece.GetDescriptorHandleIncrementSizeByCBV_SRV_UAV();
 }
 
 UINT64 IDirectXDeviceInterfece_Struct::GetCurrentFenceIndex()

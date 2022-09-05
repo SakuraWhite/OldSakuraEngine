@@ -27,3 +27,13 @@ UINT CMeshComponent::GetMaterialNum() const
 {
 	return Materials.size();//材质数量
 }
+
+bool CMeshComponent::IsDynamicReflection() const
+{
+	if (Materials.size() >= 1) //判断材质的序号  
+	{
+		return
+			Materials[0]->IsDynamicReflection() &&  //获取到动态反射
+			MeshRenderLayerType == EMeshRenderLayerType::RENDERLAYER_OPAQUE_REFLECTOR;//与不透明物体的反射层 满足这两个条件才可以有动态反射
+	}
+}

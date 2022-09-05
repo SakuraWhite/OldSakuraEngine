@@ -23,6 +23,10 @@ public:
 	virtual void Draw(float DeltaTime);//绘制(进行时)
 	virtual void PostDraw(float DeltaTime);//绘制结束
 
+	//需要渲染哪个层 单独制定渲染那个层级
+	virtual void Draw(int InLayer, float DeltaTime);
+	//找到要绘制的对象
+	virtual void FindObjectDraw(float DeltaTime, int InLayer, const CMeshComponent* InKey);
 
 	// 构建Shader
 	virtual void BuildShader();

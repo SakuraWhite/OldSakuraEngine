@@ -26,12 +26,26 @@ class FRenderingTextureResourcesUpdate
 	, public IDirectXDeviceInterfece//渲染内容的接口
 
 {
+
 public:
+	FRenderingTextureResourcesUpdate();
+
+
 	//加载贴图资源				从磁盘的某个位置导入贴图资源(路径)
 	void LoadTextureResources(const wstring& InFilename);
 	//构建纹理常数缓冲区							堆的接口           地址偏移
 	void BuildTextureConstantBuffer(ID3D12DescriptorHeap* InHeap, int Offset = 0);
+public:
+	//构建当前的参数 纹理贴图类型参数(Shader资源视图描述里的参数)
+	void BuildParam(); 
 
+	//根据类型进行重置纹理贴图				      具体的传入的贴图资源
+	void ResetTextureByType(std::unique_ptr<FRenderingTexture>* InTexture);
+
+	//设置描述加载资源的维度(按类型重置纹理)  区分是2D还是立方体贴图 还是3D贴图
+	void SetViewDimension(D3D12_SRV_DIMENSION InNewDimension);
+
+public:
 	//获取纹理贴图数量
 	FORCEINLINE UINT Size() const { return TexturesMapping.size(); }
 
@@ -40,4 +54,7 @@ public:
 protected:
 	//   有序map		   贴图叫什么名字			具体的传入的贴图资源			贴图映射
 	std::map<std::wstring, std::unique_ptr<FRenderingTexture>> TexturesMapping;
+
+	//构建Shader资源视图描述 用来描述当前资源是什么样的 格式是什么等等信息
+	D3D12_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
 };

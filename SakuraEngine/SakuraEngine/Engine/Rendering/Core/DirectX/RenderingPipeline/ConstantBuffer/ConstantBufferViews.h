@@ -15,6 +15,9 @@ struct  FConstantBufferViews :public IDirectXDeviceInterfece_Struct
 		CD3DX12_CPU_DESCRIPTOR_HANDLE InHandle,//CPU_描述符_句柄
 		UINT InConstantBufferNum, //指定构建Burrer的数量
 		UINT InHandleOffset = 0); //偏移的值
+
+	UINT GetConstantBufferByteSize();//常量缓冲区元素类型大小 直接可以获取
+
 	//获得上传缓冲区 
 	ID3D12Resource* GetBuffer() { return Constant->GetBuffer(); }
 protected:

@@ -5,6 +5,7 @@
 #include "Geometry/GeometryMap.h"
 #include "RootSignature/DirectXRootSignature.h"
 #include "../../../../Core/Viewport/ViewportInfo.h"
+#include "DynamicMap/CubeMap/DynamicCubeMap.h"
 #include "RenderLayer/RenderLayerManage.h"
 
 class CMeshComponent;
@@ -43,4 +44,6 @@ protected:
 	FDirectXPipelineState DirectXPipelineState; //渲染管线状态
 	FDirectXRootSignature RootSignature;//根签名
 	FGeometryMap GeometryMap;//拥有几何模型
+
+	FDynamicCubeMap DynamicCubeMap;//动态立方体贴图
 };

@@ -12,6 +12,8 @@
 #include "../../../../../Component/Light/Core/LightComponent.h"
 #include "../../../RenderingTextureResourcesUpdate.h"
 #include "../RenderLayer/RenderLayerManage.h"
+#include "../../../../../Component/Sky/SkyConstantBuffer.h"
+#include "../../../../../Component/Sky/FogComponent.h"
 
 UINT MeshObjectCount = 0;//累加 模型对象计数 
 
@@ -19,7 +21,14 @@ FGeometryMap::FGeometryMap()
 {
 	Geometrys.insert(pair<int, FGeometry>(0, FGeometry()) );
 
-	RenderingTextureResources = std::make_shared<FRenderingTextureResourcesUpdate>();//纹理贴图常量缓冲区实例
+	RenderingTexture2DResources = std::make_shared<FRenderingTextureResourcesUpdate>();//初始化  纹理贴图常量缓冲区实例
+	RenderingTexture2DResources->SetViewDimension(D3D12_SRV_DIMENSION_TEXTURE2D);//设置贴图类型为2D纹理贴图
+
+
+	RenderingCubeMapResources = std::make_shared<FRenderingTextureResourcesUpdate>();//初始化  立方体贴图常量缓冲区实例
+	RenderingCubeMapResources->SetViewDimension(D3D12_SRV_DIMENSION_TEXTURECUBE);//设置贴图类型为CubeMap立方体贴图
+
+	Fog = NULL;//暂时没有设置雾
 }
 
 FGeometryMap::~FGeometryMap()
@@ -40,17 +49,22 @@ void FGeometryMap::PreDraw(float DeltaTime)
 void FGeometryMap::Draw(float DeltaTime)
 {
 	//渲染绘制视口
-	DrawViewport(DeltaTime);
+	//DrawViewport(DeltaTime);
 
 	//渲染绘制灯光
 	DrawLight(DeltaTime);
 
 	//渲染绘制纹理贴图
-	DrawTexture(DeltaTime);
+	Draw2DTexture(DeltaTime);
+
+	//绘制立方体贴图
+	DrawCubeMapTexture(DeltaTime);
 
 	//绘制材质
 	DrawMaterial(DeltaTime);
 
+	//绘制雾气
+	DrawFog(DeltaTime);
 }
 
 void FGeometryMap::PostDraw(float DeltaTime)
@@ -62,11 +76,6 @@ void FGeometryMap::UpdateCalculations(float DeltaTime, const FViewportInfo& View
 {
 
 	UpdateMaterialShaderResourceView(DeltaTime, ViewportInfo);//独立更新材质着色器资源视图
-
-	//视口投影矩阵
-	XMMATRIX ViewMatrix = XMLoadFloat4x4(&ViewportInfo.ViewMatrix);//转换成矩阵 视口投影 定义摄像机向上向左向右向前向后的一些方向设置
-	XMMATRIX ProjectMatrix = XMLoadFloat4x4(&ViewportInfo.ProjectMatrix);//转换成矩阵   对摄像机的裁剪距离 近远剪裁面，FOV等的设置
-
 
 	//更新灯光
 	FLightConstantBuffer LightConstantBuffer;//更新(创建)灯光
@@ -119,6 +128,40 @@ void FGeometryMap::UpdateCalculations(float DeltaTime, const FViewportInfo& View
 	LightConstantBufferViews.Update(0, &LightConstantBuffer);//更新灯光(临时)
 
 
+	//更新视口								视口信息		从0偏移
+	UpdateCalculationsViewport(DeltaTime, ViewportInfo, 0);
+	
+	//更新雾效果
+	if (Fog)
+	{
+		if (Fog->IsDirty()) //判断脏 是否被更改过
+		{
+
+			FFogConstantBuffer FogConstantBuffer;//雾的常量缓冲区
+			{
+				//设置雾的颜色
+				fvector_color FogColor = Fog->GetFogColor();
+				FogConstantBuffer.FogColor = XMFLOAT3(FogColor.r, FogColor.g, FogColor.b);
+
+				FogConstantBuffer.FogStart = Fog->GetFogStart();//设置雾的起始点
+				FogConstantBuffer.FogRange = Fog->GetFogRange();//设置雾的范围半径
+				FogConstantBuffer.FogHeight = Fog->GetFogHeight();//设置雾的高度
+				FogConstantBuffer.FogTransparentCoefficient = Fog->GetFogTransparentCoefficient();//设置雾的透明系数
+			}
+			FogConstantBufferViews.Update(0, &FogConstantBuffer);//更新常量缓冲区
+
+			Fog->SetDirty(false);//进行更改后 把脏设置回去
+		}
+	}
+
+}
+
+void FGeometryMap::UpdateCalculationsViewport(float DeltaTime, const FViewportInfo& ViewportInfo, UINT InConstantBufferOffset)
+{
+
+	//视口投影矩阵
+	XMMATRIX ViewMatrix = XMLoadFloat4x4(&ViewportInfo.ViewMatrix);//转换成矩阵 视口投影 定义摄像机向上向左向右向前向后的一些方向设置
+	XMMATRIX ProjectMatrix = XMLoadFloat4x4(&ViewportInfo.ProjectMatrix);//转换成矩阵   对摄像机的裁剪距离 近远剪裁面，FOV等的设置
 
 
 	//更新视口投影常量缓冲区
@@ -131,8 +174,36 @@ void FGeometryMap::UpdateCalculations(float DeltaTime, const FViewportInfo& View
 	ViewportTransformation.ViewportPosition = ViewportInfo.ViewPosition;
 
 	//更新视口
-	ViewportConstantBufferViews.Update(0, &ViewportTransformation);
+	ViewportConstantBufferViews.Update(InConstantBufferOffset, &ViewportTransformation);
 
+
+}
+
+void FGeometryMap::BuildDynamicReflectionMesh()
+{
+	for (auto& Tmp : GObjects)  //遍历获取所有对象的组件资源
+	{
+		if (CMeshComponent* InMeshComponent = dynamic_cast<CMeshComponent*>(Tmp))//对组件进行转换类型
+		{
+			if (InMeshComponent->IsDynamicReflection())//判断是否为动态反射
+			{
+				DynamicReflectionMeshComponents.push_back(InMeshComponent);//收集动态反射
+			}
+		}
+	}
+}
+
+void FGeometryMap::BuildFog()
+{
+	//遍历对象  找到雾的实例
+	for (auto& Tmp : GObjects) 
+	{
+		if (CFogComponent* InFogComponent = dynamic_cast<CFogComponent*>(Tmp))//对雾的组件进行转换类型
+		{
+			Fog = InFogComponent;//手机雾的组件内容
+			break;
+		}
+	}
 }
 
 void FGeometryMap::BuildMesh(const size_t InMeshHash, CMeshComponent* InMesh, const FMeshRenderingData& MeshData)
@@ -197,14 +268,24 @@ void FGeometryMap::UpdateMaterialShaderResourceView(float DeltaTime, const FView
 				//材质常量缓冲区赋值 粗糙度
 				MaterialConstantBuffer.Roughness = InMaterial->GetRoughness();
 
+				//材质常量缓冲区赋值 折射率
+				MaterialConstantBuffer.Refraction = InMaterial->GetRefractiveValue();
+
 				//材质常量缓冲区赋值 材质类型
 				MaterialConstantBuffer.MaterialType = InMaterial->GetMaterialType();
+
+				//材质常量缓冲区赋值  菲涅尔因子
+				fvector_3d F0 = InMaterial->GetFresnelF0();//获取材质的菲涅尔因子
+				MaterialConstantBuffer.FresnelF0 = XMFLOAT3(F0.x, F0.y, F0.z);
+
+				//材质常量缓冲区赋值 透明度
+				MaterialConstantBuffer.Transparency = InMaterial->GetTransparency();
 
 				//外部资源导入
 				{
 					//基本颜色贴图
-					//外部导入BaseColor资源	更新通过当前的渲染纹理资源寻找资源路径或key			通过材质获取到基本颜色贴图索引key
-					if (auto BaseColorTextureResourcesPtr = RenderingTextureResources->FindRenderingTexture(InMaterial->GetBaseColorIndexKey()))
+					//外部导入BaseColor资源	更新通过当前的渲染纹理资源寻找资源路径或key	   获取到基本颜色贴图索引key
+					if (auto BaseColorTextureResourcesPtr = FindRenderingTexture(InMaterial->GetBaseColorIndexKey()))
 					{
 						//常量缓冲区赋值 基本颜色贴图索引					通过上面判断后的唯一指针来获得贴图ID
 						MaterialConstantBuffer.BaseColorIndex = (*BaseColorTextureResourcesPtr)->RenderingTextureID;
@@ -216,8 +297,8 @@ void FGeometryMap::UpdateMaterialShaderResourceView(float DeltaTime, const FView
 					}
 
 					//法线贴图
-					//外部导入法线资源											通过材质获取到法线贴图索引key
-					if (auto NormalTextureResourcesPtr = RenderingTextureResources->FindRenderingTexture(InMaterial->GetNormalIndexKey()))
+					//外部导入法线资源							获取到法线贴图索引key
+					if (auto NormalTextureResourcesPtr = FindRenderingTexture(InMaterial->GetNormalIndexKey()))
 					{
 						//常量缓冲区赋值 基本法线贴图索引					通过上面判断后的唯一指针来获得贴图ID
 						MaterialConstantBuffer.NormalIndex = (*NormalTextureResourcesPtr)->RenderingTextureID;
@@ -229,8 +310,8 @@ void FGeometryMap::UpdateMaterialShaderResourceView(float DeltaTime, const FView
 					}
 
 					//高光贴图
-					//外部导入高光资源											通过材质获取到高光贴图索引key
-					if (auto SpecularTextureResourcesPtr = RenderingTextureResources->FindRenderingTexture(InMaterial->GetSpecularKey()))
+					//外部导入高光资源							获取到高光贴图索引key
+					if (auto SpecularTextureResourcesPtr = FindRenderingTexture(InMaterial->GetSpecularKey()))
 					{
 						//常量缓冲区赋值 基本高光贴图索引					通过上面判断后的唯一指针来获得贴图ID
 						MaterialConstantBuffer.SpecularIndex = (*SpecularTextureResourcesPtr)->RenderingTextureID;
@@ -269,6 +350,8 @@ void FGeometryMap::LoadTexture()
 
 	for (int i = 0; i < Paths.index; i++)//遍历路径中的文件夹
 	{
+		//......./filename_cubemap.  如果贴图有后缀_cubemap为命名的贴图 识别为CubeMap作为区分
+
 		if (find_string(Paths.paths[i], ".dds", 0) != -1)//判断文件格式是否为".dds" 从序号0号开始遍历寻找 遍历到的资源如果不为空则继续运行
 		{
 			//单位化路径资源
@@ -277,7 +360,18 @@ void FGeometryMap::LoadTexture()
 			wchar_t TexturePath[1024] = { 0 };
 			char_to_wchar_t(TexturePath, 1024, Paths.paths[i]);//将char转换为tchar 转为宽字符
 
-			RenderingTextureResources->LoadTextureResources(TexturePath);//读取贴图资源
+			//区分贴图是否为cubemap
+			if (wfind_string(TexturePath, L"_CubeMap.") != -1 ||
+				wfind_string(TexturePath, L"_cubemap.") != -1) //判断输入贴图是否有_cubemap后缀
+			{
+				//如果检测为CubeMap
+				RenderingCubeMapResources->LoadTextureResources(TexturePath);
+			}
+			else
+			{
+				//如果检测不是则读取为Texture2D
+				RenderingTexture2DResources->LoadTextureResources(TexturePath);
+			}
 
 		}
 
@@ -299,14 +393,10 @@ void FGeometryMap::Build()
 void FGeometryMap::BuildDescriptorHeap()
 {
 	//构建描述堆		              	       
-	DescriptorHeap.Build(  
-		GetDrawObjectNumber()  // 获取当前模型对象的数量
-		//+ GetDrawMaterialObjectNumber()	//	这里是加上模型中材质对象的数量  
-		+ 1			//这里+1是摄像机
-		+GetDrawLightObjectNumber()//这里再加灯光
-		+GetDrawTextureResourcesNumber()); //这里获取渲染贴图资源数量
-
-
+	DescriptorHeap.Build(
+		GetDrawTexture2DResourcesNumber()//获取2D纹理贴图资源数量
+		+ GetDrawCubeMapResourcesNumber()//获取静态立方体贴图数量
+		+ 1);//这里是动态立方体贴图
 
 }
 
@@ -314,13 +404,19 @@ void FGeometryMap::BuildMeshConstantBuffer()
 {	//创建模型常量缓冲区
 
 	//创建对象常量缓冲区					    求字节数运算符  模型对象变换          获得绘制模型对象的数量
-	MeshConstantBufferViews.CreateConstant(sizeof(FObjectTransformation), GetDrawObjectNumber());
+	MeshConstantBufferViews.CreateConstant(sizeof(FObjectTransformation), GetDrawMeshObjectNumber());
 
-	//CPU_描述符_句柄																					获取堆启动的CPU描述符句柄
-	CD3DX12_CPU_DESCRIPTOR_HANDLE DesHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetHeap()->GetCPUDescriptorHandleForHeapStart());
+	////CPU_描述符_句柄																					获取堆启动的CPU描述符句柄
+	//CD3DX12_CPU_DESCRIPTOR_HANDLE DesHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetHeap()->GetCPUDescriptorHandleForHeapStart());
+	//
+	////构建常量缓冲区								CPU描述句柄	    获得绘制模型对象的数量
+	//MeshConstantBufferViews.BuildMeshConstantBuffer(DesHandle, GetDrawMeshObjectNumber());
+}
 
-	//构建常量缓冲区								CPU描述句柄	    获得绘制模型对象的数量
-	MeshConstantBufferViews.BuildMeshConstantBuffer(DesHandle, GetDrawObjectNumber());
+void FGeometryMap::BuildFogConstantBuffer()
+{
+	//创建对象常量缓冲区	 雾
+	FogConstantBufferViews.CreateConstant(sizeof(FFogConstantBuffer), 1);
 }
 
 void FGeometryMap::BuildMaterialShaderResourceView()
@@ -368,7 +464,7 @@ void FGeometryMap::BuildMaterialShaderResourceView()
 	MaterialConstantBufferViews.BuildMeshConstantBuffer(
 		DesHandle, 
 		GetDrawMaterialObjectNumber(),//获得绘制材质对象的数量
-		GetDrawObjectNumber());//与上方模型常量缓冲区不同的是 材质常量缓冲区比模型要多出一个偏移,这里是在模型的基础上进行偏移
+		GetDrawMeshObjectNumber());//与上方模型常量缓冲区不同的是 材质常量缓冲区比模型要多出一个偏移,这里是在模型的基础上进行偏移
 	*/
 
 
@@ -379,21 +475,21 @@ void FGeometryMap::BuildLightConstantBuffer()
 		//创建对象常量缓冲区					    求字节数运算符  灯光对象变换    获得绘制材灯光对象的数量
 	LightConstantBufferViews.CreateConstant(sizeof(FLightConstantBuffer), GetDrawLightObjectNumber());
 
-	//CPU_描述符_句柄																					获取堆启动的CPU描述符句柄
-	CD3DX12_CPU_DESCRIPTOR_HANDLE DesHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetHeap()->GetCPUDescriptorHandleForHeapStart());
-
-	//构建常量缓冲区								CPU描述句柄	    
-	LightConstantBufferViews.BuildMeshConstantBuffer(
-		DesHandle,
-		GetDrawLightObjectNumber(),//获得绘灯光对象的数量
-		GetDrawObjectNumber());//这里是在模型缓冲区的基础上进行偏移
-
-		//+ GetDrawMaterialObjectNumber() //在加上材质缓冲区偏移
+	////CPU_描述符_句柄																					获取堆启动的CPU描述符句柄
+	//CD3DX12_CPU_DESCRIPTOR_HANDLE DesHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetHeap()->GetCPUDescriptorHandleForHeapStart());
+	//
+	////构建常量缓冲区								CPU描述句柄	    
+	//LightConstantBufferViews.BuildMeshConstantBuffer(
+	//	DesHandle,
+	//	GetDrawLightObjectNumber(),//获得绘灯光对象的数量
+	//	GetDrawMeshObjectNumber());//这里是在模型缓冲区的基础上进行偏移
+	//
+	//	//+ GetDrawMaterialObjectNumber() //在加上材质缓冲区偏移
 }
 
-UINT FGeometryMap::GetDrawObjectNumber()
+UINT FGeometryMap::GetDrawMeshObjectNumber()
 {
-	return Geometrys[0].GetDrawObjectNumber();//获取渲染对象的数量
+	return Geometrys[0].GetDrawMeshObjectNumber();//获取渲染对象的数量
 	
 }
 
@@ -408,71 +504,116 @@ UINT FGeometryMap::GetDrawLightObjectNumber()
 	return 1;
 }
 
-UINT FGeometryMap::GetDrawTextureResourcesNumber()
+UINT FGeometryMap::GetDrawTexture2DResourcesNumber()
 {
-	return RenderingTextureResources->Size();//获取渲染纹理资源数量
+	return RenderingTexture2DResources->Size();//获取渲染纹理资源数量  2d
+}
+
+UINT FGeometryMap::GetDrawCubeMapResourcesNumber()
+{
+	return RenderingCubeMapResources->Size();//获取渲染纹理资源数量 CubeMap
+}
+
+UINT FGeometryMap::GetDynamicReflectionViewportNum()
+{
+	//6个动态反射摄像机
+	return DynamicReflectionMeshComponents.size() * 6;
 }
 
 void FGeometryMap::BuildTextureConstantBuffer()
 {
-	//构建纹理常数缓冲区
-	RenderingTextureResources->BuildTextureConstantBuffer(
-		DescriptorHeap.GetHeap(),		//传入描述符堆
-		GetDrawObjectNumber()		//绘制模型对象数量
-		+ GetDrawLightObjectNumber()	//绘制灯光对象数量
-		+ 1);//+视口  然后进行偏移
+	//构建纹理常数缓冲区  Texture2D
+	RenderingTexture2DResources->BuildTextureConstantBuffer(
+		DescriptorHeap.GetHeap(),0);		//传入描述符堆
 
-		//+ GetDrawMaterialObjectNumber() //绘制材质对象数量
+	//构建CubeMap 纹理常数缓冲区
+	RenderingCubeMapResources->BuildTextureConstantBuffer(
+		DescriptorHeap.GetHeap(),        //传入描述符堆
+		GetDrawTexture2DResourcesNumber());//2D纹理贴图数量 最后进行偏移
 }
 
-void FGeometryMap::BuildViewportConstantBufferView()
+void FGeometryMap::BuildViewportConstantBufferView(UINT InViewportOffset)
 {
 	//创建视口常量缓冲区					    求字节数运算符  视口变换          数量
-	ViewportConstantBufferViews.CreateConstant(sizeof(FViewportTransformation), 1);
+	ViewportConstantBufferViews.CreateConstant(sizeof(FViewportTransformation), 
+		1 +//主摄像机视口
+		GetDynamicReflectionViewportNum() + //获取动态反射视口数量 （这里是每个模型都有6个）
+		InViewportOffset);	//输入的视口偏移
+		
 
-	//CPU_描述符_句柄																					获取堆启动的CPU描述符句柄
-	CD3DX12_CPU_DESCRIPTOR_HANDLE DesHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetHeap()->GetCPUDescriptorHandleForHeapStart());
+	////CPU_描述符_句柄																					获取堆启动的CPU描述符句柄
+	//CD3DX12_CPU_DESCRIPTOR_HANDLE DesHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetHeap()->GetCPUDescriptorHandleForHeapStart());
+	//
+	////构建视口常量缓冲区						          
+	//ViewportConstantBufferViews.BuildMeshConstantBuffer(
+	//	DesHandle,  //CPU描述句柄
+	//	1,			//偏移	
+	//	GetDrawMeshObjectNumber()//获取绘制对象数量 绘制模型对象数量
+	//	+ GetDrawLightObjectNumber());//绘制灯光对象数量的基础上进行偏移
+	//
+	//	//+GetDrawMeshObjectNumber()//绘制材质对象数量
 
-	//构建视口常量缓冲区						          
-	ViewportConstantBufferViews.BuildMeshConstantBuffer(
-		DesHandle,  //CPU描述句柄
-		1,			//偏移	
-		GetDrawObjectNumber()//获取绘制对象数量 绘制模型对象数量
-		+ GetDrawLightObjectNumber());//绘制灯光对象数量的基础上进行偏移
+}
 
-		//+GetDrawObjectNumber()//绘制材质对象数量
+bool FGeometryMap::IsStartUPFog()
+{
+	//判断雾是否有值
+	return Fog != NULL;
+}
 
+std::unique_ptr<FRenderingTexture>* FGeometryMap::FindRenderingTexture(const std::string& InKey)
+{
+	//通过文件名来寻找贴图
+	if (auto RenderingTexture2DPtr = RenderingTexture2DResources->FindRenderingTexture(InKey))
+	{
+		return RenderingTexture2DPtr;
+	}
+	else if (auto RenderingCubeMapPtr = RenderingCubeMapResources->FindRenderingTexture(InKey))
+	{
+		return RenderingCubeMapPtr;
+	}
+	return nullptr;
 }
 
 void FGeometryMap::DrawLight(float DeltaTime)
 {
-	//偏移  当前描述符偏移
-	UINT DescriptorOffset = GetD3dDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	//获取Gpu相关的描述符句柄
-	auto DesHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(GetHeap()->GetGPUDescriptorHandleForHeapStart());
-	DesHandle.Offset(
-		GetDrawObjectNumber()//在模型绘制之后偏移
-		,DescriptorOffset);//对Gpu相关描述符做偏移
-
-	//设置图形 根描述符
-	GetGraphicsCommandList()->SetGraphicsRootDescriptorTable(2, DesHandle);
+	////偏移  当前描述符偏移
+	//UINT DescriptorOffset = GetD3dDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//
+	////获取Gpu相关的描述符句柄
+	//auto DesHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(GetHeap()->GetGPUDescriptorHandleForHeapStart());
+	//DesHandle.Offset(
+	//	GetDrawMeshObjectNumber()//在模型绘制之后偏移
+	//	,DescriptorOffset);//对Gpu相关描述符做偏移
+	//
+	////设置图形 根描述符
+	//GetGraphicsCommandList()->SetGraphicsRootDescriptorTable(2, DesHandle);
+	// 
+	//通过图形命令列表去设置视图缓冲区的根常量
+	GetGraphicsCommandList()->SetGraphicsRootConstantBufferView(
+		2,//灯光常量缓冲区位置为2
+		LightConstantBufferViews.GetBuffer()->GetGPUVirtualAddress());//指定灯光常量缓冲区地址
 }
 
 void FGeometryMap::DrawViewport(float DeltaTime)
 {
-	//偏移  当前描述符偏移
-	UINT DescriptorOffset = GetD3dDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	////偏移  当前描述符偏移
+	//UINT DescriptorOffset = GetD3dDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//
+	////获取Gpu相关的描述符句柄
+	//auto DesHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(GetHeap()->GetGPUDescriptorHandleForHeapStart());
+	//DesHandle.Offset(
+	//	GetDrawMeshObjectNumber() //获取模型数量
+	//	+ GetDrawLightObjectNumber(), //获取灯光数量之后进行偏移  最后进行渲染视口
+	//	DescriptorOffset);//对Gpu相关描述符做偏移
+	//
+	////设置图形 根描述符
+	//GetGraphicsCommandList()->SetGraphicsRootDescriptorTable(1, DesHandle);
 
-	//获取Gpu相关的描述符句柄
-	auto DesHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(GetHeap()->GetGPUDescriptorHandleForHeapStart());
-	DesHandle.Offset(
-		GetDrawObjectNumber() //获取模型数量
-		+ GetDrawLightObjectNumber(), //获取灯光数量之后进行偏移  最后进行渲染视口
-		DescriptorOffset);//对Gpu相关描述符做偏移
-
-	//设置图形 根描述符
-	GetGraphicsCommandList()->SetGraphicsRootDescriptorTable(1, DesHandle);
+	//通过图形命令列表去设置视图缓冲区的根常量
+	GetGraphicsCommandList()->SetGraphicsRootConstantBufferView(
+		1, //视口常量缓冲区位置为1
+		ViewportConstantBufferViews.GetBuffer()->GetGPUVirtualAddress());//指定视口常量缓冲区地址
 }
 
 void FGeometryMap::DrawMesh(float DeltaTime)
@@ -489,22 +630,46 @@ void FGeometryMap::DrawMaterial(float DeltaTime)
 		MaterialConstantBufferViews.GetBuffer()->GetGPUVirtualAddress());//在常量缓冲区中拿到上传缓冲区  然后获取到GPU的地址
 }
 
-void FGeometryMap::DrawTexture(float DeltaTime)
+void FGeometryMap::Draw2DTexture(float DeltaTime)
 {
-	//偏移  当前描述符偏移
-	UINT DescriptorOffset = GetD3dDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//偏移  当前描述符偏移  获取描述符句柄size
+	UINT DescriptorOffset = GetDescriptorHandleIncrementSizeByCBV_SRV_UAV();
 
-	//获取Gpu相关的描述符句柄
+	//设置2d贴图
+		//获取Gpu相关的描述符句柄
 	auto DesHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(GetHeap()->GetGPUDescriptorHandleForHeapStart());
-	DesHandle.Offset(
-		GetDrawObjectNumber()//模型对象数量
-		+ GetDrawLightObjectNumber() //灯光对象数量
-		+ 1, //视口 在以上描述之后做偏移
-		DescriptorOffset);//对Gpu相关描述符做偏移
+
+	DesHandle.Offset(0, DescriptorOffset);//对Gpu相关描述符做偏移
 
 	//设置图形 根描述符
-	GetGraphicsCommandList()->SetGraphicsRootDescriptorTable(3, DesHandle);
+	GetGraphicsCommandList()->SetGraphicsRootDescriptorTable(5, DesHandle);
 
+
+}
+
+void FGeometryMap::DrawCubeMapTexture(float DeltaTime)
+{
+	//偏移  当前描述符偏移	获取描述符句柄size
+	UINT DescriptorOffset = GetDescriptorHandleIncrementSizeByCBV_SRV_UAV();
+
+	//设置立方体贴图
+	//获取Gpu相关的描述符句柄
+	auto DesHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(GetHeap()->GetGPUDescriptorHandleForHeapStart());
+
+	DesHandle.Offset(GetDrawTexture2DResourcesNumber(), DescriptorOffset);//对Gpu相关描述符做偏移
+
+	//设置图形 根描述符
+	GetGraphicsCommandList()->SetGraphicsRootDescriptorTable(6, DesHandle);
+	
+
+}
+
+void FGeometryMap::DrawFog(float DeltaTime)
+{
+	//设置图形 根描述符   
+	GetGraphicsCommandList()->SetGraphicsRootConstantBufferView(
+		3,
+		FogConstantBufferViews.GetBuffer()->GetGPUVirtualAddress());
 }
 
 bool FGeometry::IsRenderingDataExistence(CMeshComponent* InKey)
@@ -644,7 +809,7 @@ bool FGeometry::FindMeshRenderingDataByHash(const size_t& InHash, FRenderingData
 
 
 
-UINT FGeometry::GetDrawObjectNumber() const //获取渲染对象数量
+UINT FGeometry::GetDrawMeshObjectNumber() const //获取渲染对象数量
 {
 	//获取渲染对象 累加（创建一个函数 然后进行++）
 	return MeshObjectCount;

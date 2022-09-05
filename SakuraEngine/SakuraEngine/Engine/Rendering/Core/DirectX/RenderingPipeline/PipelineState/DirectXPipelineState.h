@@ -36,12 +36,19 @@ public:
 	//绘制的时候调用  重置管线状态对象(类型)
 	void ResetPSO(int InPSOType);
 
+	//重置管线状态对象(类型) 空值 只提供给不透明层级使用
+	void ResetPSO();
 public:
 	//设置填充模式  判断是否为线框模式
 	void SetFillMode(bool bWireframe);
 
 	//设置渲染目标		渲染层级序号				渲染目标混合系数
 	void SetRenderTarget(int Index, const D3D12_RENDER_TARGET_BLEND_DESC& InRenderTargetBlend);
+
+	//设置光栅化状态								输入光栅化渲染器描述
+	void SetRasterizerState(const CD3DX12_RASTERIZER_DESC& InRasterizerDesc);
+	//设置深度模板测试状态					输入深度模板描述
+	void SetDepthStencilState(const CD3DX12_DEPTH_STENCIL_DESC& InDepthStencilDesc);
 private:
 	//捕获按键 来更改图形渲染状态 shader渲染、线框渲染
 	void CaptureKeyboardKeys();

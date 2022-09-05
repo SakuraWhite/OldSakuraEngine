@@ -1,7 +1,7 @@
 //摄像机
 #pragma once//防止重复包含
 #include "Viewport/Viewport.h"
-#include "../Actor/Core/ActorObject.h"
+#include "Viewport/ClientViewport.h"
 #include "../CodeReflection/CodeReflectionMacroTag.h"
 #include "../Interface/DirectXDeviceInterfece.h"
 
@@ -13,11 +13,10 @@ class CInputComponent;
 
 //C开头的Camera  C是核心意思
 class GCamera :
-	public GActorObject//继承自GActorObject
-	,public FViewport//继承自Fviewport
+	public GClientViewport //客户端视口
 	,public IDirectXDeviceInterfece//继承IDirectXDeviceInterfece 拿到视口句柄
 {
-
+	typedef GClientViewport Super; //反射客户端视口
 	
 	CVARIABLE()  //反射宏
 	CInputComponent* InputComponent;//输入输出控制
@@ -31,7 +30,7 @@ public:   //构造
 	virtual void ExecuteKeyboard(const FInputKey& InputKey);
 
 	//接口 用作构建屏幕空间矩阵  
-	virtual void BuildVewMatrix(float DeltaTime);
+	virtual void BuildViewMatrix(float DeltaTime);
 
 public:
 	//鼠标输入的接口  

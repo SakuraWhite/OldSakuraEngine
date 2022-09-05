@@ -120,11 +120,7 @@ void CWindowsEngine::Tick(float DeltaTime)
 		RenderingEngine->Tick(DeltaTime);
 
 		}
-
 	}
-
-
-	
 }
 
 int CWindowsEngine::PreExit()

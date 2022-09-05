@@ -6,6 +6,15 @@ const wchar_t DDS[] = L".dds";
 const wchar_t Asset[] = L"/Asset/";
 const wchar_t Project[] = L"/Project/";
 
+FRenderingTextureResourcesUpdate::FRenderingTextureResourcesUpdate()
+{
+	//初始化 构建Shader资源视图描述
+	memset(&ShaderResourceViewDesc, 0, sizeof(D3D12_SHADER_RESOURCE_VIEW_DESC));
+	
+	//初始化 当前的参数（Shader资源视图）
+	BuildParam();
+}
+
 void FRenderingTextureResourcesUpdate::LoadTextureResources(const wstring& InFilename)
 {
 	//创建全局唯一指针
@@ -69,21 +78,12 @@ void FRenderingTextureResourcesUpdate::BuildTextureConstantBuffer(ID3D12Descript
 	CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(InHeap->GetCPUDescriptorHandleForHeapStart());
 	//描述符句柄偏移
 	Handle.Offset(Offset, DescriptorOffset);
-
-
-	//构建Shader资源视图描述 用来描述当前资源是什么样的 格式是什么等等信息
-	D3D12_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc = {};
-	ShaderResourceViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;//默认着色器组件映射  采样图片RGB像素时可以交换分量 比如RG交换 或者GB交换等
-	ShaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//描述当前shader视图格式信息
-	ShaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//描述加载资源的维度 这里是2D纹理格式
-	ShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;//当前mipmap的索引 
-	ShaderResourceViewDesc.Texture2D.MipLevels = 1;      //mipmap的层级数量
-	ShaderResourceViewDesc.Texture2D.ResourceMinLODClamp = 0.f;//mipmap层级限制 指定最小的mipmap层级 设置为0可以访问所有mipmap层级
-
+	
 	for (auto &Tmp:TexturesMapping)//遍历资源
 	{
-		ShaderResourceViewDesc.Format = Tmp.second->Data->GetDesc().Format;//通过资源数据获取描述  再通过描述获取格式
-		ShaderResourceViewDesc.Texture2D.MipLevels = Tmp.second->Data->GetDesc().MipLevels;//通过资源数据获取描述  从资源描述获取mipmap的层级
+		//根据类型初始化对应贴图
+		ResetTextureByType(&Tmp.second);//通过重置后的资源类型函数获取mipmap的层级
+
 		GetD3dDevice()->CreateShaderResourceView(//通过D3D驱动创建shader资源视图
 			Tmp.second->Data.Get(),		//获得资源数据
 			&ShaderResourceViewDesc,	//资源描述 
@@ -93,6 +93,49 @@ void FRenderingTextureResourcesUpdate::BuildTextureConstantBuffer(ID3D12Descript
 
 
 
+}
+
+void FRenderingTextureResourcesUpdate::BuildParam()
+{
+	ShaderResourceViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;//默认着色器组件映射  采样图片RGB像素时可以交换分量 比如RG交换 或者GB交换等
+	ShaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//描述当前shader视图格式信息
+	ShaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//描述加载资源的维度 这里是2D纹理格式
+}
+
+void FRenderingTextureResourcesUpdate::ResetTextureByType(std::unique_ptr<FRenderingTexture>* InTexture)
+{
+	//确定纹理贴图的的格式类型  通过资源数据获取描述  再通过描述获取格式
+	ShaderResourceViewDesc.Format = (*InTexture)->Data->GetDesc().Format;
+
+	//对信息详细注册 shader资源描述
+	switch (ShaderResourceViewDesc.ViewDimension)
+	{
+
+	case D3D12_SRV_DIMENSION_TEXTURE2D:  //如果是2D纹理贴图，则进行2D纹理贴图类型的更新
+	{
+		ShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;   //当前mipmap的索引
+		ShaderResourceViewDesc.Texture2D.MipLevels = (*InTexture)->Data->GetDesc().MipLevels;//mipmap的层级数量
+		ShaderResourceViewDesc.Texture2D.ResourceMinLODClamp = 0.f;//mipmap层级限制 指定最小的mipmap层级 设置为0可以访问所有mipmap层级
+		ShaderResourceViewDesc.Texture2D.PlaneSlice = 0;//占位
+		break;//打断
+	}
+	case D3D12_SRV_DIMENSION_TEXTURECUBE://如果是立方体贴图，则进行立方体贴图类型的更新
+	{
+		ShaderResourceViewDesc.TextureCube.MostDetailedMip = 0; //当前mipmap的索引
+		ShaderResourceViewDesc.TextureCube.MipLevels = (*InTexture)->Data->GetDesc().MipLevels;//mipmap层级
+		ShaderResourceViewDesc.TextureCube.ResourceMinLODClamp = 0.f;//mipmap层级限制 指定最小的mipmap层级 设置为0可以访问所有mipmap层级
+		break;
+	}
+
+
+	}
+
+}
+
+void FRenderingTextureResourcesUpdate::SetViewDimension(D3D12_SRV_DIMENSION InNewDimension)
+{
+	//加载 新的类型纹理 
+	ShaderResourceViewDesc.ViewDimension = InNewDimension;
 }
 
 std::unique_ptr<FRenderingTexture>* FRenderingTextureResourcesUpdate::FindRenderingTexture(const std::string& InKey)

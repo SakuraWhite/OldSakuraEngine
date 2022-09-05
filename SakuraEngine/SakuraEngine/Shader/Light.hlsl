@@ -1,5 +1,4 @@
-
-
+#pragma once
 
 struct Light
 {
@@ -9,13 +8,13 @@ struct Light
     float3 LightDirection; //灯光方向
     float EndAttenuation; //灯光的衰减的结束点
     
-    float3 Position;//灯光位置
-    int LightType;//灯光类型
+    float3 Position; //灯光位置
+    int LightType; //灯光类型
     
     float ConicalInnerCorner; //聚光灯内角
     float ConicalOuterCorner; //聚光灯外角
-    float xx1;//占位符
-    float xx2;//占位符
+    float xx1; //占位符
+    float xx2; //占位符
 };
 
 //判断灯光方向区分不同的灯光类型   灯光      对象世界位置
@@ -163,4 +162,4 @@ float4 ComputeLightStrength(
         } 
     }
         return float4(0.f, 0.f, 0.f, 1.f); //如果不是以上灯光类型给则返回
-    }
+}

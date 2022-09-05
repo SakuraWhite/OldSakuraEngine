@@ -10,6 +10,8 @@ FOpaqueRenderLayer::FOpaqueRenderLayer()
 
 void FOpaqueRenderLayer::Draw(float DeltaTime)
 {
+	DirectXPipelineState->ResetPSO();//重置管线状态对象PSO  重置为当前的管线状态
+
 	Super::Draw(DeltaTime);
 }
 
@@ -17,24 +19,22 @@ void FOpaqueRenderLayer::BuildShader()
 {
 	//构建Shader HLSL
 
-	char TextureNumBuff[10] = { 0 };//申请一个纹理贴图数量缓冲区
-	D3D_SHADER_MACRO ShaderMacro[] =  //shader宏 容器 储存贴图
-	{
-		"TEXTURE2D_MAP_NUM", //定义当前的宏 这里是贴图的数量
-		_itoa(GeometryMap->GetDrawTextureResourcesNumber(),TextureNumBuff,10), //将纹理贴图缓冲区里的贴图数量取出然后将整形转换为字符串(10进制) 然后输入给容器里 动态的输入
-		NULL,NULL,   //这个容器结尾必须是两个null
-	};
+	vector<ShaderType::FShaderMacro> ShaderMacro;//提取自己写的Shader宏
+	BuildShaderMacro(ShaderMacro);//创建宏实例
+
+	vector<D3D_SHADER_MACRO> D3DShaderMacro;//shader宏实例 D3D的宏
+	ShaderType::ToD3DShaderMacro(ShaderMacro, D3DShaderMacro);//转换为D3D的shader宏
 
 	VertexShader.BuildShaders(//构建顶点着色器
 		L"../SakuraEngine/Shader/HelloHLSL.hlsl",//寻找外部的hlsl着色器语言文件
 		"VertexShaderMain",//入口函数名
 		"vs_5_1",//使用的版本
-		ShaderMacro);//指定容器
+		D3DShaderMacro.data());//指定容器
 	PixelShader.BuildShaders(			//构建像素着色器
 		L"../SakuraEngine/Shader/HelloHLSL.hlsl",//寻找外部的hlsl着色器语言文件
 		"PixelShaderMain", //入口函数名
 		"ps_5_1",//构建像素着色器
-		ShaderMacro);//指定容器
+		D3DShaderMacro.data());//指定容器
 	DirectXPipelineState->BindShader(VertexShader, PixelShader);//将Shader绑定在渲染管线状态上
 
 	//输入布局 构建层 位置颜色法线等等信息
@@ -66,12 +66,16 @@ void FOpaqueRenderLayer::BuildShader()
 
 void FOpaqueRenderLayer::BuildPSO()
 {
-	//构建PSO管线状态对象
-	//管线状态					线框模式
-	DirectXPipelineState->Build(Wireframe);
-	//设置模型填充模式(线框/灰模)
-	DirectXPipelineState->SetFillMode(false);
+	Super::BuildPSO();//反射 执行构建管线状态对象父类
+
 	//管线状态				灰度模型
 	DirectXPipelineState->Build(GrayModel);
+	
+
+	//构建PSO管线状态对象
+	//设置模型填充模式(线框/灰模)
+	DirectXPipelineState->SetFillMode(true);
+	//管线状态					线框模式
+	DirectXPipelineState->Build(Wireframe);
 
 }

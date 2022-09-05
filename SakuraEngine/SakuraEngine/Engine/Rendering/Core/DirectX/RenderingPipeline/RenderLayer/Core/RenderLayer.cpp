@@ -21,6 +21,41 @@ void FRenderLayer::RegisterRenderLayer()
 
 }
 
+void FRenderLayer::BuildShaderMacro(std::vector<ShaderType::FShaderMacro>& InMacro)
+{
+
+	{
+		ShaderType::FShaderMacro ShaderMacro;//创建shader宏
+
+		char TextureNumBuff[10] = { 0 };//申请一个纹理贴图数量缓冲区
+
+		ShaderMacro.Name = "TEXTURE2D_MAP_NUM"; //定义当前的宏 这里是贴图的数量
+		ShaderMacro.Definition = _itoa(GeometryMap->GetDrawTexture2DResourcesNumber(), TextureNumBuff, 10); //将纹理贴图缓冲区里的贴图数量取出然后将整形转换为字符串(10进制) 然后输入给容器里 动态的输入
+		
+		InMacro.push_back(ShaderMacro);//shader宏 容器 储存贴图
+	}
+
+	{
+		ShaderType::FShaderMacro ShaderMacro;//创建shader宏
+
+		char TextureNumBuff[10] = { 0 };//申请一个纹理贴图数量缓冲区
+
+		ShaderMacro.Name = "CUBE_MAP_NUM"; //定义当前的宏 这里是立方体贴图的数量
+		ShaderMacro.Definition = _itoa(GeometryMap->GetDrawCubeMapResourcesNumber(), TextureNumBuff, 10);
+
+		InMacro.push_back(ShaderMacro);//shader宏 容器 储存贴图
+	}
+
+	{
+		ShaderType::FShaderMacro ShaderMacro;//创建shader宏
+
+		ShaderMacro.Name = "START_UP_FOG";//是否开启当前的雾
+		ShaderMacro.Definition = GeometryMap->IsStartUPFog() ? "1" : "0";//判断是否是雾效
+
+		InMacro.push_back(ShaderMacro);//shader宏 容器 储存贴图
+	}
+}
+
 
 void FRenderLayer::Init(FGeometryMap* InGeometryMap, FDirectXPipelineState* InDirectXPipelineState)
 {
@@ -36,58 +71,14 @@ void FRenderLayer::PreDraw(float DeltaTime)
 
 void FRenderLayer::Draw(float DeltaTime)
 {
-	//GPU_描述符_句柄的偏移
-	UINT DescriptorOffset = GetD3dDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
+	//模型地址偏移
+	UINT MeshOffset = GeometryMap->MeshConstantBufferViews.GetConstantBufferByteSize();
 
 	//模型构建
-	for (auto& InRenderingData : RenderDatas)
+	for (auto& InRenderingData : RenderDatas) //遍历渲染信息
 	{
-		//顶点缓冲区视图		通过几何视图里的渲染数据中的几何Key找到顶点缓冲区视图
-		D3D12_VERTEX_BUFFER_VIEW VBV = GeometryMap->Geometrys[InRenderingData.GeometryKey].GetVertexBufferView();
-		//Index索引缓冲区视图 
-		D3D12_INDEX_BUFFER_VIEW IBV = GeometryMap->Geometrys[InRenderingData.GeometryKey].GetIndexBufferView();
-
-
-		//创建模型的GPU描述符句柄 每一帧都获取一遍  GPU_描述符_句柄
-		auto DesMeshHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(GeometryMap->GetHeap()->GetGPUDescriptorHandleForHeapStart());
-
-		//设置当前视图
-		GetGraphicsCommandList()->IASetIndexBuffer(&IBV);
-
-		//绑定渲染流水线上的输入槽，可以在输入装配器阶段传入顶点数据
-		GetGraphicsCommandList()->IASetVertexBuffers(
-			0,//起始输入槽 0~15 一共16个索引
-			1,//k k+1 ... k+n-1 //与输入槽绑定的数量 顶点缓冲区的数量 设输入槽索引为k 那么我们绑定的缓冲区就是n 那公式就是k+n-1  这里有0个输入槽，那么绑定缓冲区就是n=k+1 为1
-			&VBV);//输入顶点Buffer视图
-
-		//定义渲染状态
-		if ((*InRenderingData.Mesh->GetMaterials())[0]->GetMaterialDisplayStatus())
-		{
-
-		}
-
-
-		//                                            通过渲染数据拿到mesh     再拿到第零号材质      之后再拿到材质显示类型
-		EMaterialDisplayStatusType DisplayStatus = (*InRenderingData.Mesh->GetMaterials())[0]->GetMaterialDisplayStatus();//定义材质显示类型
-		//在绘制前，定义一下我们要绘制哪一种图元，是绘制成 点或者是线 还是面 
-		GetGraphicsCommandList()->IASetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)DisplayStatus);//定义绘制
-			
-		//模型起始地址偏移			用偏移的方式  按起始地点偏移
-		DesMeshHandle.Offset(InRenderingData.MeshObjectIndex, DescriptorOffset);//我们的常量缓冲区每次要储存，我们的常量缓冲区都会做偏移。
-		//在绘制前 将描述附表设置到根签名中 绘制在0号寄存器的对象常量缓冲区中 
-		GetGraphicsCommandList()->SetGraphicsRootDescriptorTable(0, DesMeshHandle);//设置到CBV的首地址就行
-
-
-		//真正的渲染接口  这个API可以帮助我们去绘制索引，实例化基元 真正的绘制
-		GetGraphicsCommandList()->DrawIndexedInstanced(
-			InRenderingData.IndexSize,//渲染模型的顶点数量
-			1,//实例化的数量，目前只有一个
-			InRenderingData.IndexOffsetPosition,//这里需要输入顶点缓冲区被绘制的索引的第一个
-			InRenderingData.VertexOffsetPosition,//GPU从索引缓冲区读取的第一个索引的位置。
-			0);//在从顶点缓冲区读取每一个实例数据之前添加到每个索引的值。
-	
-
+		DrawObject(DeltaTime, InRenderingData);//根据渲染信息进行渲染对象
 	}
 
 }
@@ -95,6 +86,86 @@ void FRenderLayer::Draw(float DeltaTime)
 void FRenderLayer::PostDraw(float DeltaTime)
 {
 
+}
+
+void FRenderLayer::DrawObject(float DeltaTime, const FRenderingData& InRenderingData)
+{
+	//模型地址偏移
+	UINT MeshOffset = GeometryMap->MeshConstantBufferViews.GetConstantBufferByteSize();
+
+	//顶点缓冲区视图		通过几何视图里的渲染数据中的几何Key找到顶点缓冲区视图
+	D3D12_VERTEX_BUFFER_VIEW VBV = GeometryMap->Geometrys[InRenderingData.GeometryKey].GetVertexBufferView();
+	//Index索引缓冲区视图 
+	D3D12_INDEX_BUFFER_VIEW IBV = GeometryMap->Geometrys[InRenderingData.GeometryKey].GetIndexBufferView();
+
+	//通过几何视图拿到常量缓冲区的GPU虚拟地址 首地址
+	D3D12_GPU_VIRTUAL_ADDRESS FirstVirtualMeshAddress = GeometryMap->MeshConstantBufferViews.GetBuffer()->GetGPUVirtualAddress();
+	////创建模型的GPU描述符句柄 每一帧都获取一遍  GPU_描述符_句柄
+	//auto DesMeshHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(GeometryMap->GetHeap()->GetGPUDescriptorHandleForHeapStart());
+
+	//设置当前视图
+	GetGraphicsCommandList()->IASetIndexBuffer(&IBV);
+
+	//绑定渲染流水线上的输入槽，可以在输入装配器阶段传入顶点数据
+	GetGraphicsCommandList()->IASetVertexBuffers(
+		0,//起始输入槽 0~15 一共16个索引
+		1,//k k+1 ... k+n-1 //与输入槽绑定的数量 顶点缓冲区的数量 设输入槽索引为k 那么我们绑定的缓冲区就是n 那公式就是k+n-1  这里有0个输入槽，那么绑定缓冲区就是n=k+1 为1
+		&VBV);//输入顶点Buffer视图
+
+	//定义渲染状态
+	if ((*InRenderingData.Mesh->GetMaterials())[0]->GetMaterialDisplayStatus())
+	{
+
+	}
+
+
+	//                                            通过渲染数据拿到mesh     再拿到第零号材质      之后再拿到材质显示类型
+	EMaterialDisplayStatusType DisplayStatus = (*InRenderingData.Mesh->GetMaterials())[0]->GetMaterialDisplayStatus();//定义材质显示类型
+	//在绘制前，定义一下我们要绘制哪一种图元，是绘制成 点或者是线 还是面 
+	GetGraphicsCommandList()->IASetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)DisplayStatus);//定义绘制
+
+	////模型起始地址偏移			用偏移的方式  按起始地点偏移
+	//DesMeshHandle.Offset(InRenderingData.MeshObjectIndex, DescriptorOffset);//我们的常量缓冲区每次要储存，我们的常量缓冲区都会做偏移。
+	////在绘制前 将描述附表设置到根签名中 绘制在0号寄存器的对象常量缓冲区中 
+	//GetGraphicsCommandList()->SetGraphicsRootDescriptorTable(0, DesMeshHandle);//设置到CBV的首地址就行
+
+	//每个对象相对首地址的偏移  求出虚拟地址
+	D3D12_GPU_VIRTUAL_ADDRESS VAddress =
+		FirstVirtualMeshAddress + InRenderingData.MeshObjectIndex * MeshOffset;
+
+	//直接进行设置常量缓冲区
+	GetGraphicsCommandList()->SetGraphicsRootConstantBufferView(0, VAddress);
+
+	//真正的渲染接口  这个API可以帮助我们去绘制索引，实例化基元 真正的绘制
+	GetGraphicsCommandList()->DrawIndexedInstanced(
+		InRenderingData.IndexSize,//渲染模型的顶点数量
+		1,//实例化的数量，目前只有一个
+		InRenderingData.IndexOffsetPosition,//这里需要输入顶点缓冲区被绘制的索引的第一个
+		InRenderingData.VertexOffsetPosition,//GPU从索引缓冲区读取的第一个索引的位置。
+		0);//在从顶点缓冲区读取每一个实例数据之前添加到每个索引的值。
+
+}
+
+void FRenderLayer::FindObjectDraw(float DeltaTime, const CMeshComponent* InKey)
+{
+
+	for (auto& InRenderingData : RenderDatas)//遍历渲染数据
+	{
+		if (InRenderingData.Mesh == InKey)//判断渲染数据
+		{
+			DrawObject(DeltaTime, InRenderingData);//对指定的对象进行渲染
+			break;
+		}
+	}
+}
+
+void FRenderLayer::BuildPSO()
+{
+	//创建渲染状态对象中的构建shader
+	BuildShader();
+
+	//构建管线状态对象参数  PSO参数 
+	DirectXPipelineState->BuildParam();
 }
 
 void FRenderLayer::UpdateCalculations(float DeltaTime, const FViewportInfo& ViewportInfo)
@@ -150,3 +221,4 @@ void FRenderLayer::UpdateCalculations(float DeltaTime, const FViewportInfo& View
 		
 	}
 }
+

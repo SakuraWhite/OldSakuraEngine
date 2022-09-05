@@ -19,7 +19,9 @@ struct FMaterialConstantBuffer
 
 	XMFLOAT4 BaseColor;// 定义材质 基本颜色
 	XMFLOAT3 SpecularColor;//定义高光颜色
-	int XX4;//占位
+	float Refraction;//折射度
+	XMFLOAT3 FresnelF0;//菲涅尔因子
+	float Transparency;//透明
 	//材质变换信息
 	XMFLOAT4X4 TransformInformation;
 };

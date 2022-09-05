@@ -27,6 +27,15 @@ public://公开的 初始化相关
 	virtual int PreExit();//预退出
 	virtual int Exit();//退出
 	virtual int PostExit();//退出后的内存释放，也就是收尾
+
+public:
+	//开始设置主视口渲染目标
+	void StartSetMainViewportRenderTarget();
+	//结束设置主视口渲染目标
+	void EndSetMainViewportRenderTarget();
+	//清除主视口交换链画布
+	void ClearMainSwapChainCanvas();
+
 public:
 	ID3D12Resource* GetCurrentSwapBuff() const; //快速获取SwapBuff   api
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentSwapBufferView() const;//快速获取SwapBuffer视图位置的api

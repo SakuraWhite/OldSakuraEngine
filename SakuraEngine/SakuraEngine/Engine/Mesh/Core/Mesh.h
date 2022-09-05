@@ -49,9 +49,11 @@ public:
 public:
 	//设置模型渲染层级类型
 	virtual void SetMeshRenderLayerType(EMeshRenderLayerType InRenderLayerType);
+
 protected:
 	//设置组件
 	virtual void SetMeshComponent(CMeshComponent* InMeshComponent); 
+
 public:
 	//获取材质的数量 
 	UINT GetMaterialNum()const;

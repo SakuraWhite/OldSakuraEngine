@@ -47,3 +47,9 @@ void FConstantBufferViews::BuildMeshConstantBuffer(
 
 
 }
+
+UINT FConstantBufferViews::GetConstantBufferByteSize()
+{
+
+	return Constant->GetConstantBufferByteSize();
+}
